@@ -67,6 +67,57 @@ function addJoin<
   >;
 }
 
+export function addNoOnJoin<
+  Alias extends string,
+  TableRef extends Table<string, Record<string, Column>>,
+  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
+  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
+  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
+  StrictAllowedColumn extends StrictColumnSelector<
+    Alias,
+    TableRef,
+    JoinedTables
+  >,
+  JoinType extends AcceptedJoin,
+  JoinTable extends Table<string, Record<string, Column>>,
+  JoinAlias extends string,
+  FinalJoinedTables extends JoinedTables & { [K in JoinAlias]: JoinTable },
+>(
+  query: QueryBuilder<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+  joinType: JoinType,
+  joinTable: JoinTable,
+  alias: JoinAlias
+) {
+  if (!query.definition.joins) query.definition.joins = [];
+
+  query.definition.joins.push(`${joinType} JOIN ${joinTable.name} AS ${alias}`);
+
+  if (!query.definition.joinedTables) {
+    query.definition.joinedTables = {} as JoinedTables;
+  }
+
+  (
+    query.definition.joinedTables as unknown as Record<string, typeof joinTable>
+  )[alias] = joinTable;
+
+  return query as unknown as QueryBuilder<
+    Alias,
+    TableRef,
+    FinalJoinedTables,
+    Omit<Definition, 'joins' | 'joinedTables'> & {
+      joins: string[];
+      joinedTables: FinalJoinedTables;
+    }
+  >;
+}
+
 export function prepareJoin<
   Alias extends string,
   TableRef extends Table<string, Record<string, Column>>,

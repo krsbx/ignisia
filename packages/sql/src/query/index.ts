@@ -22,7 +22,7 @@ import type {
   QueryTransformerContract,
 } from './contract';
 import { aggregateCol, alias, clone, col } from './helper';
-import { prepareJoin } from './join';
+import { addNoOnJoin, prepareJoin } from './join';
 import { exec, toQuery, toString } from './sql';
 import type {
   AcceptedInsertValues,
@@ -198,6 +198,20 @@ export class QueryBuilder<
     JoinAlias extends string,
   >(joinTable: JoinTable, alias: JoinAlias) {
     return prepareJoin(this, AcceptedJoin.INNER, joinTable, alias);
+  }
+
+  public fullJoin<
+    JoinTable extends Table<string, Record<string, Column>>,
+    JoinAlias extends string,
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.FULL, joinTable, alias);
+  }
+
+  public crossJoin<
+    JoinTable extends Table<string, Record<string, Column>>,
+    JoinAlias extends string,
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return addNoOnJoin(this, AcceptedJoin.CROSS, joinTable, alias);
   }
 
   public naturalJoin<
