@@ -1,5 +1,5 @@
 import { Dialect } from '../table/constants';
-import { deepClone } from '../utilities';
+import { cloneDefinition } from '../utilities';
 import { AcceptedColumnTypes, ColumnTypeMapping } from './constants';
 import type {
   AcceptedColumnTypeMap,
@@ -159,7 +159,7 @@ export class Column<
       ...(this.enums.length && { values: this.enums }),
     } as Options);
 
-    Object.assign(column.definition, deepClone(this.definition));
+    Object.assign(column.definition, cloneDefinition(this.definition));
 
     return column;
   }

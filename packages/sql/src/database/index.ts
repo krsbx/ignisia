@@ -10,6 +10,7 @@ import {
   dropColumnDefault,
   dropColumnNotNull,
   setColumnDefault,
+  setColumnNotNull,
 } from './alter';
 import { addColumn, dropColumn, renameColumn } from './column';
 import type {
@@ -137,7 +138,7 @@ export class Database<
       this
     ) as this['dropColumnDefault'];
 
-    this.setColumnNotNull = setColumnDefault.bind(
+    this.setColumnNotNull = setColumnNotNull.bind(
       this
     ) as this['setColumnNotNull'];
     this.dropColumnNotNull = dropColumnNotNull.bind(

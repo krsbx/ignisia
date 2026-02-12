@@ -3,6 +3,7 @@ import { Dialect } from '../table/constants';
 import type {
   DatabaseDialect,
   DatabaseExecOptions,
+  MysqlConfig,
   PostgresConfig,
   SqlConfigMapping,
   SqliteConfig,
@@ -116,11 +117,8 @@ export class DatabasePsql extends BaseSql<
   }
 }
 
-export class DatabaseMysql extends BaseSql<
-  typeof Dialect.MYSQL,
-  PostgresConfig
-> {
-  constructor(options: PostgresConfig) {
+export class DatabaseMysql extends BaseSql<typeof Dialect.MYSQL, MysqlConfig> {
+  constructor(options: MysqlConfig) {
     super(Dialect.MYSQL, options);
   }
 }

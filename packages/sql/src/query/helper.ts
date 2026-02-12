@@ -1,7 +1,7 @@
 import { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
-import { deepClone } from '../utilities';
+import { cloneDefinition } from '../utilities';
 import type { AggregationFunction } from './constants';
 import type {
   ColumnSelector,
@@ -72,7 +72,7 @@ export function clone<
     StrictAllowedColumn
   >(this.table);
 
-  Object.assign(query.definition, deepClone(this.definition));
+  Object.assign(query.definition, cloneDefinition(this.definition));
 
   return query;
 }
