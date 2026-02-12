@@ -1,27 +1,64 @@
-import type { MiddlewareComposerOptions } from './types';
+import type { Context } from '../context';
+import type { Middleware } from '../router/types';
 
-export async function mwComposer({
-  ctx,
-  middlewares,
-}: MiddlewareComposerOptions) {
-  let index = 0;
-  let nextCalled = false;
+export class MwComposer {
+  private ctx: Context;
+  private middlewares: Middleware[];
+  private index: number;
+  private nextCalled: boolean;
 
-  function next() {
-    nextCalled = true;
+  public constructor(ctx: Context, middlewares: Middleware[]) {
+    this.ctx = ctx;
+    this.middlewares = middlewares;
+    this.index = 0;
+    this.nextCalled = false;
+    this.next = this.next.bind(this);
   }
 
-  while (index < middlewares.length) {
-    nextCalled = false;
+  public next() {
+    this.nextCalled = true;
+  }
 
-    const res = await middlewares[index](ctx, next);
+  public async mwComposerAsync(
+    promise: Promise<Response | void>
+  ): Promise<Response | void> {
+    const result = await promise;
 
-    if (res instanceof Response) {
-      return res;
+    if (result instanceof Response) return result;
+    if (!this.nextCalled) return;
+
+    this.index++;
+
+    while (this.index < this.middlewares.length) {
+      this.nextCalled = false;
+
+      const result = this.middlewares[this.index](this.ctx, this.next);
+
+      if (result instanceof Promise) return this.mwComposerAsync(result);
+      if (result instanceof Response) return result;
+      if (!this.nextCalled) break;
+
+      this.index++;
     }
+  }
 
-    if (!nextCalled) break;
+  public mwComposer(): Response | void | Promise<Response | void> {
+    while (this.index < this.middlewares.length) {
+      this.nextCalled = false;
 
-    index++;
+      const result = this.middlewares[this.index](this.ctx, this.next);
+
+      if (result instanceof Promise) return this.mwComposerAsync(result);
+      if (result instanceof Response) return result;
+      if (!this.nextCalled) break;
+
+      this.index++;
+    }
+  }
+
+  public static compose(ctx: Context, middlewares: Middleware[]) {
+    const composer = new MwComposer(ctx, middlewares);
+
+    return composer.mwComposer();
   }
 }

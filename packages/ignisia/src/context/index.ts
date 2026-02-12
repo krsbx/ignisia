@@ -1,5 +1,11 @@
 import { generateHeaderEntries } from '../utilities';
-import { NotFound, StatusCode } from './constants';
+import {
+  HTML_INIT,
+  JSON_INIT,
+  NotFound,
+  StatusCode,
+  TEXT_PLAIN_INIT,
+} from './constants';
 import { ContextCookie } from './cookie';
 import { ContextRequest } from './request';
 
@@ -10,7 +16,7 @@ export class Context<
   Query extends Record<string, string> = NonNullable<unknown>,
   State extends Record<string, unknown> = NonNullable<unknown>,
 > {
-  private _state: State;
+  private _state: State | null;
   private _status: StatusCode;
   private _headers: Record<string, string[]> | null;
   private _cookie: ContextCookie | null;
@@ -19,8 +25,8 @@ export class Context<
   private _req: ContextRequest<Values, Params, Query> | null;
   private _res: Response | null;
 
-  public constructor(request: Request, params: Params) {
-    this._state = {} as State;
+  public constructor(request: Request, params: Params = {} as Params) {
+    this._state = null;
     this._status = StatusCode.OK;
     this._headers = null;
     this._cookie = null;
@@ -28,6 +34,10 @@ export class Context<
     this._params = params;
     this._req = null;
     this._res = null;
+  }
+
+  public get rawRequest() {
+    return this._request;
   }
 
   /** Do not call this method, it is for internal use only */
@@ -120,12 +130,16 @@ export class Context<
       [K in Key]: Value;
     },
   >(key: Key, value: Value) {
+    if (!this._state) this._state = {} as State;
+
     (this._state as Record<string, unknown>)[key] = value;
 
     return this as unknown as Context<Values, Params, Query, FinalState>;
   }
 
   public get<Key extends keyof State, Value extends State[Key]>(key: Key) {
+    if (!this._state) return undefined;
+
     return this._state[key] as Value;
   }
 
@@ -143,14 +157,26 @@ export class Context<
   }
 
   public text(value: string) {
+    if (!this._headers && this._status === StatusCode.OK) {
+      return new Response(value, TEXT_PLAIN_INIT);
+    }
+
     return this.body(value, 'text/plain');
   }
 
   public json<Value>(value: Value) {
+    if (!this._headers && this._status === StatusCode.OK) {
+      return new Response(JSON.stringify(value), JSON_INIT);
+    }
+
     return this.body(JSON.stringify(value), 'application/json');
   }
 
   public html(value: string) {
+    if (!this._headers && this._status === StatusCode.OK) {
+      return new Response(value, HTML_INIT);
+    }
+
     return this.body(value, 'text/html');
   }
 
