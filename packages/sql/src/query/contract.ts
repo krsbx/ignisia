@@ -3,7 +3,11 @@ import type { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
 import type { Dialect } from '../table/constants';
-import type { addCondition, addRawCondition } from './condition';
+import type {
+  addCondition,
+  addGroupCondition,
+  addRawCondition,
+} from './condition';
 import type {
   AcceptedOperator,
   ConditionClause,
@@ -400,6 +404,54 @@ export interface QueryConditionContract<
       Value,
       typeof LogicalOperator.AND,
       Lowercase<typeof ConditionClause.HAVING>
+    >
+  >;
+
+  whereGroup(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >,
+    callback: (
+      q: QueryBuilder<Alias, TableRef, JoinedTables>
+    ) => QueryBuilder<Alias, TableRef, JoinedTables>
+  ): ReturnType<
+    typeof addGroupCondition<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn,
+      typeof LogicalOperator.AND
+    >
+  >;
+
+  orGroup(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >,
+    callback: (
+      q: QueryBuilder<Alias, TableRef, JoinedTables>
+    ) => QueryBuilder<Alias, TableRef, JoinedTables>
+  ): ReturnType<
+    typeof addGroupCondition<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn,
+      typeof LogicalOperator.OR
     >
   >;
 }

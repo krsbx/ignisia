@@ -31,6 +31,8 @@ export const AcceptedOperator = {
   IS_NOT_NULL: 'isNotNull',
   BETWEEN: 'between',
   NOT_BETWEEN: 'notBetween',
+  STARTS_WITH: 'startsWith',
+  ENDS_WITH: 'endsWith',
 } as const;
 
 export type AcceptedOperator =

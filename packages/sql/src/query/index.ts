@@ -1,7 +1,16 @@
 import type { Column } from '../column';
 import type { Table } from '../table';
 import { quoteIdentifier } from '../utilities';
-import { having, or, rawHaving, rawOr, rawWhere, where } from './condition';
+import {
+  having,
+  or,
+  orGroup,
+  rawHaving,
+  rawOr,
+  rawWhere,
+  where,
+  whereGroup,
+} from './condition';
 import { AcceptedJoin, QueryType } from './constants';
 import type {
   QueryConditionContract,
@@ -165,6 +174,23 @@ export class QueryBuilder<
     StrictAllowedColumn
   >['having'];
 
+  public whereGroup: QueryConditionContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >['whereGroup'];
+  public orGroup: QueryConditionContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >['orGroup'];
+
   constructor(table: TableRef) {
     this.hooks = {};
     this.table = table;
@@ -206,6 +232,9 @@ export class QueryBuilder<
 
     this.and = this.where as this['and'];
     this.or = or.bind(this) as this['or'];
+
+    this.whereGroup = whereGroup.bind(this) as unknown as this['whereGroup'];
+    this.orGroup = orGroup.bind(this) as unknown as this['orGroup'];
   }
 
   public leftJoin<

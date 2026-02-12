@@ -101,6 +101,12 @@ export function getCondition<
     case AcceptedOperator.NOT_BETWEEN:
       return `${column as string} NOT BETWEEN ? AND ?`;
 
+    case AcceptedOperator.STARTS_WITH:
+      return `${column as string} LIKE ?`;
+
+    case AcceptedOperator.ENDS_WITH:
+      return `${column as string} LIKE ?`;
+
     default:
       throw new Error('Invalid operator');
   }
@@ -124,7 +130,7 @@ export function getTimestamp<
         createdAt = table.timestamp.createdAt;
       }
 
-      isHasCreatedAt = table.timestamp.createdAt === false;
+      isHasCreatedAt = table.timestamp.createdAt !== false;
     }
 
     if (isCustomTimestamp) {
@@ -132,7 +138,7 @@ export function getTimestamp<
         updatedAt = table.timestamp.updatedAt;
       }
 
-      isHasUpdatedAt = table.timestamp.updatedAt === false;
+      isHasUpdatedAt = table.timestamp.updatedAt !== false;
     }
   }
 

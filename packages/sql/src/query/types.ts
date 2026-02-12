@@ -44,7 +44,11 @@ export type WhereValue<T extends Column> = {
             | typeof AcceptedOperator.IS_NULL
             | typeof AcceptedOperator.IS_NOT_NULL
         ? never
-        : T['_output'];
+        : K extends
+              | typeof AcceptedOperator.STARTS_WITH
+              | typeof AcceptedOperator.ENDS_WITH
+          ? T['_output']
+          : T['_output'];
 };
 
 export type AcceptedOrderBy<Columns extends string> = {
@@ -55,17 +59,15 @@ export type AcceptedOrderBy<Columns extends string> = {
 type InsertValuesParser<Columns extends Record<string, Column>> = {
   [ColName in keyof Columns]: {
     output: Columns[ColName]['_output'];
-    required: Columns[ColName]['definition'] extends { type: infer Type }
-      ? Type extends typeof AcceptedColumnTypes.SERIAL
+    required: Columns[ColName]['type'] extends typeof AcceptedColumnTypes.SERIAL
+      ? false
+      : Columns[ColName]['definition'] extends { autoIncrement: true }
         ? false
-        : Columns[ColName]['definition'] extends { notNull: true }
-          ? true
-          : Columns[ColName]['definition'] extends { autoIncrement: true }
-            ? false
-            : Columns[ColName]['definition'] extends { default: unknown }
-              ? false
-              : true
-      : false;
+        : Columns[ColName]['definition'] extends { default: unknown }
+          ? false
+          : Columns[ColName]['definition'] extends { notNull: true }
+            ? true
+            : false;
   };
 };
 
