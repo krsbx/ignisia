@@ -32,6 +32,15 @@ export class ContextRequest<
     return this;
   }
 
+  /** Do not call this method, it is for internal use only */
+  public reset(request: Request, params: Params) {
+    this._request = request;
+    this._params = params;
+    this._url = undefined;
+    this._cache = undefined;
+    this._query = undefined;
+  }
+
   public param(): Params;
   public param<
     K extends keyof Params | (string & {}),

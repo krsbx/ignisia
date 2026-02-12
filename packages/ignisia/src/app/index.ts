@@ -178,44 +178,30 @@ export class Ignisia<BasePath extends string> extends Router<BasePath> {
         invoke = (ctx) => this.continueWith(ctx, globalMws, () => next(ctx));
       }
 
-      const hasParams = path.includes(':') || path.includes('*');
-
-      compiled[path][route.method] = this.wrapCompiledHandler(
-        invoke,
-        hasParams
-      );
+      compiled[path][route.method] = this.wrapCompiledHandler(invoke);
     }
 
     return compiled;
   }
 
-  private wrapCompiledHandler(invoke: Handler, hasParams: boolean) {
-    if (!this._onError) {
-      if (hasParams) {
-        return (req: Request) =>
-          invoke(new Context(req, (req as unknown as Bun.BunRequest).params));
-      }
-
-      return (req: Request) => invoke(new Context(req));
-    }
-
-    if (hasParams) {
-      return (req: Request) => {
-        try {
-          return invoke(
-            new Context(req, (req as unknown as Bun.BunRequest).params)
-          );
-        } catch (error) {
-          return this.handleError(error, new Context(req));
-        }
-      };
-    }
+  private wrapCompiledHandler(invoke: Handler) {
+    // Pre-allocate a reusable Context for this route.
+    // Sync handlers reuse it (0 allocation).
+    // On Async handlers re-create the context for the next request.
+    //  > Use null as a placeholder
+    let ctx = new Context(null!);
 
     return (req: Request) => {
       try {
-        return invoke(new Context(req));
+        ctx.reset(req, (req as unknown as Bun.BunRequest).params);
+
+        const result = invoke(ctx);
+
+        if (result instanceof Promise) ctx = new Context(null!);
+
+        return result;
       } catch (error) {
-        return this.handleError(error, new Context(req));
+        return this.handleError(error, ctx);
       }
     };
   }

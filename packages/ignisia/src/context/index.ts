@@ -13,7 +13,7 @@ export class Context<
   State extends Record<string, unknown> = NonNullable<unknown>,
 > {
   private _state?: State;
-  private _status: StatusCode;
+  private _status?: StatusCode;
   private _headers?: Record<string, string[]>;
   private _cookie?: ContextCookie;
   private _params: Params;
@@ -25,7 +25,6 @@ export class Context<
     request: Request,
     params: Params = EMPTY_PARAMS as Params
   ) {
-    this._status = StatusCode.OK;
     this._request = request;
     this._params = params;
   }
@@ -43,6 +42,21 @@ export class Context<
     }
 
     return this;
+  }
+
+  /** Do not call this method, it is for internal use only */
+  public reset(request: Request, params: Params = EMPTY_PARAMS as Params) {
+    this._request = request;
+    this._params = params;
+    this._status = undefined;
+    this._headers = undefined;
+    this._state = undefined;
+    this._cookie = undefined;
+    this._res = undefined;
+
+    if (this._req) {
+      this._req.reset(request, params);
+    }
   }
 
   public get req() {
@@ -151,7 +165,7 @@ export class Context<
   }
 
   public text(value: string) {
-    if (!this._headers && this._status === StatusCode.OK) {
+    if (!this._headers && !this._status) {
       return new Response(value);
     }
 
@@ -159,7 +173,7 @@ export class Context<
   }
 
   public json<Value>(value: Value) {
-    if (!this._headers && this._status === StatusCode.OK) {
+    if (!this._headers && !this._status) {
       return Response.json(value);
     }
 
@@ -167,7 +181,7 @@ export class Context<
   }
 
   public html(value: string) {
-    if (!this._headers && this._status === StatusCode.OK) {
+    if (!this._headers && !this._status) {
       return new Response(value, HTML_INIT);
     }
 
