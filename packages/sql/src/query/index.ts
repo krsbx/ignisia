@@ -3,13 +3,18 @@ import type { Table } from '../table';
 import { quoteIdentifier } from '../utilities';
 import {
   having,
+  havingNot,
   or,
   orGroup,
+  orNot,
+  orNotGroup,
   rawHaving,
   rawOr,
   rawWhere,
   where,
   whereGroup,
+  whereNot,
+  whereNotGroup,
 } from './condition';
 import { AcceptedJoin, QueryType } from './constants';
 import type {
@@ -54,6 +59,36 @@ export class QueryBuilder<
     TableRef,
     JoinedTables
   > = StrictColumnSelector<Alias, TableRef, JoinedTables>,
+  TransformerContract extends QueryTransformerContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  > = QueryTransformerContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+  QueryContract extends QueryConditionContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  > = QueryConditionContract<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
 > {
   public readonly hooks: Partial<QuerHooks>;
   public readonly table: TableRef;
@@ -66,130 +101,26 @@ export class QueryBuilder<
     AllowedColumn
   >;
 
-  public alias: QueryTransformerContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['alias'];
-  public clone: QueryTransformerContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['clone'];
+  public alias: TransformerContract['alias'];
+  public clone: TransformerContract['clone'];
 
-  public toQuery: QueryTransformerContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['toQuery'];
-  public toString: QueryTransformerContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['toString'];
-  public exec: QueryTransformerContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['exec'];
+  public toQuery: TransformerContract['toQuery'];
+  public toString: TransformerContract['toString'];
+  public exec: TransformerContract['exec'];
 
-  public rawWhere: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['rawWhere'];
-  public rawAnd: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['rawWhere'];
-  public rawOr: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['rawOr'];
-  public rawHaving: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['rawHaving'];
+  public rawWhere: QueryContract['rawWhere'];
+  public rawAnd: QueryContract['rawWhere'];
+  public rawOr: QueryContract['rawOr'];
+  public rawHaving: QueryContract['rawHaving'];
 
-  public where: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['where'];
-  public and: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['where'];
-  public or: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['or'];
-  public having: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['having'];
+  public where: QueryContract['where'];
+  public and: QueryContract['where'];
+  public or: QueryContract['or'];
+  public having: QueryContract['having'];
 
-  public whereGroup: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['whereGroup'];
-  public orGroup: QueryConditionContract<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >['orGroup'];
+  public whereGroup: QueryContract['whereGroup'];
+  public orGroup: QueryContract['orGroup'];
+  public readonly not: QueryContract['not'];
 
   constructor(table: TableRef) {
     this.hooks = {};
@@ -235,6 +166,17 @@ export class QueryBuilder<
 
     this.whereGroup = whereGroup.bind(this) as unknown as this['whereGroup'];
     this.orGroup = orGroup.bind(this) as unknown as this['orGroup'];
+
+    this.not = {
+      where: whereNot.bind(this) as this['not']['where'],
+      having: havingNot.bind(this) as this['not']['having'],
+      or: orNot.bind(this) as this['not']['or'],
+
+      whereGroup: whereNotGroup.bind(
+        this
+      ) as unknown as this['not']['whereGroup'],
+      orGroup: orNotGroup.bind(this) as unknown as this['not']['orGroup'],
+    };
   }
 
   public leftJoin<
