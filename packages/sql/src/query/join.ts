@@ -8,7 +8,7 @@ import type {
   StrictColumnSelector,
 } from './types';
 
-export function addJoin<
+function addJoin<
   Alias extends string,
   TableRef extends Table<string, Record<string, Column>>,
   JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
@@ -65,4 +65,42 @@ export function addJoin<
       joinedTables: FinalJoinedTables;
     }
   >;
+}
+
+export function prepareJoin<
+  Alias extends string,
+  TableRef extends Table<string, Record<string, Column>>,
+  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
+  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
+  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
+  StrictAllowedColumn extends StrictColumnSelector<
+    Alias,
+    TableRef,
+    JoinedTables
+  >,
+  JoinType extends AcceptedJoin,
+  JoinTable extends Table<string, Record<string, Column>>,
+  JoinAlias extends string,
+>(
+  query: QueryBuilder<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+  joinType: JoinType,
+  joinTable: JoinTable,
+  alias: JoinAlias
+) {
+  return {
+    on<
+      BaseColName extends `${Alias}."${keyof TableRef['columns'] & string}"`,
+      JoinColName extends
+        `${JoinAlias}."${keyof JoinTable['columns'] & string}"`,
+    >(baseColumn: BaseColName, joinColumn: JoinColName) {
+      return addJoin(query, joinType, alias, joinTable, baseColumn, joinColumn);
+    },
+  };
 }

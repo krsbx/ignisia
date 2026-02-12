@@ -22,7 +22,7 @@ import type {
   QueryTransformerContract,
 } from './contract';
 import { aggregateCol, alias, clone, col } from './helper';
-import { addJoin } from './join';
+import { prepareJoin } from './join';
 import { exec, toQuery, toString } from './sql';
 import type {
   AcceptedInsertValues,
@@ -182,85 +182,29 @@ export class QueryBuilder<
   public leftJoin<
     JoinTable extends Table<string, Record<string, Column>>,
     JoinAlias extends string,
-    BaseColName extends `${Alias}."${keyof TableRef['columns'] & string}"`,
-    JoinColName extends `${JoinAlias}."${keyof JoinTable['columns'] & string}"`,
-  >(
-    joinTable: JoinTable,
-    alias: JoinAlias,
-    baseColumn: BaseColName,
-    joinColumn: JoinColName
-  ) {
-    return addJoin(
-      this,
-      AcceptedJoin.LEFT,
-      alias,
-      joinTable,
-      baseColumn,
-      joinColumn
-    );
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.LEFT, joinTable, alias);
   }
 
   public rightJoin<
     JoinTable extends Table<string, Record<string, Column>>,
     JoinAlias extends string,
-    BaseColName extends `${Alias}."${keyof TableRef['columns'] & string}"`,
-    JoinColName extends `${JoinAlias}."${keyof JoinTable['columns'] & string}"`,
-  >(
-    joinTable: JoinTable,
-    alias: JoinAlias,
-    baseColumn: BaseColName,
-    joinColumn: JoinColName
-  ) {
-    return addJoin(
-      this,
-      AcceptedJoin.RIGHT,
-      alias,
-      joinTable,
-      baseColumn,
-      joinColumn
-    );
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.RIGHT, joinTable, alias);
   }
 
   public innerJoin<
     JoinTable extends Table<string, Record<string, Column>>,
     JoinAlias extends string,
-    BaseColName extends `${Alias}."${keyof TableRef['columns'] & string}"`,
-    JoinColName extends `${JoinAlias}."${keyof JoinTable['columns'] & string}"`,
-  >(
-    joinTable: JoinTable,
-    alias: JoinAlias,
-    baseColumn: BaseColName,
-    joinColumn: JoinColName
-  ) {
-    return addJoin(
-      this,
-      AcceptedJoin.INNER,
-      alias,
-      joinTable,
-      baseColumn,
-      joinColumn
-    );
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.INNER, joinTable, alias);
   }
 
   public naturalJoin<
     JoinTable extends Table<string, Record<string, Column>>,
     JoinAlias extends string,
-    BaseColName extends `${Alias}."${keyof TableRef['columns'] & string}"`,
-    JoinColName extends `${JoinAlias}."${keyof JoinTable['columns'] & string}"`,
-  >(
-    joinTable: JoinTable,
-    alias: JoinAlias,
-    baseColumn: BaseColName,
-    joinColumn: JoinColName
-  ) {
-    return addJoin(
-      this,
-      AcceptedJoin.NATURAL,
-      alias,
-      joinTable,
-      baseColumn,
-      joinColumn
-    );
+  >(joinTable: JoinTable, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.NATURAL, joinTable, alias);
   }
 
   public distinct() {

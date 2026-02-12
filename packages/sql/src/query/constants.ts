@@ -69,6 +69,8 @@ export const AcceptedJoin = {
   INNER: 'INNER',
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
+  FULL: 'FULL OUTER',
+  CROSS: 'CROSS',
   NATURAL: 'NATURAL',
 } as const;
 
