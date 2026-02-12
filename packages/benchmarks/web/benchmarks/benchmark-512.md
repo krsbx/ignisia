@@ -1,8 +1,8 @@
 # Autocannon Benchmarks
 
 **Runtime**: bun
-**Date**: April 17, 2025 02:39:00 PM +07:00
-**CPU**: M2
+**Date**: February 12, 2026 05:28:43 PM +07:00
+**CPU**: M4
 **RAM**: 16384.00 MB
 **Connections**: 512
 **Duration**: 30 seconds
@@ -12,7 +12,7 @@
 
 | Framework | Total Requests | RPS (req/sec) | Failed Requests | P50 Latency (ms) | P75 Latency (ms) | P90 Latency (ms) | P99 Latency (ms) | Avg Latency (ms) | Min Latency (ms) | Max Latency (ms) |
 | --------- | -------------- | ------------- | --------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- |
-| Ignisia   | 916868.00      | 30541.91      | 0.00            | 2517 ms          | 3298 ms          | 4102 ms          | 5600 ms          | 2366.92 ms       | 20 ms            | 8541 ms          |
-| Hono      | 1247137.00     | 41529.70      | 0.00            | 2439 ms          | 3772 ms          | 5025 ms          | 7098 ms          | 2553.87 ms       | 4 ms             | 12637 ms         |
-| Bun       | 1321525.00     | 44021.49      | 0.00            | 776 ms           | 1291 ms          | 1443 ms          | 1745 ms          | 829.36 ms        | 15 ms            | 2225 ms          |
-| Elysia    | 20330.00       | 667.21        | 0.00            | 569 ms           | 975 ms           | 1445 ms          | 3988 ms          | 821.66 ms        | 26 ms            | 14373 ms         |
+| Ignisia   | 1592899.00     | 53078.94      | 0.00            | 98 ms            | 100 ms           | 105 ms           | 145 ms           | 95.79 ms         | 27 ms            | 259 ms           |
+| Hono      | 1517696.00     | 50573.01      | 0.00            | 107 ms           | 200 ms           | 212 ms           | 241 ms           | 140.24 ms        | 13 ms            | 363 ms           |
+| Bun       | 1545040.00     | 51467.02      | 0.00            | 100 ms           | 102 ms           | 108 ms           | 133 ms           | 98.79 ms         | 26 ms            | 271 ms           |
+| Elysia    | 1610667.00     | 53653.13      | 0.00            | 195 ms           | 200 ms           | 203 ms           | 218 ms           | 189.53 ms        | 62 ms            | 331 ms           |
