@@ -144,7 +144,7 @@ export function buildUpdateQuery<
     q.definition.params = updateParams;
   }
 
-  return `UPDATE ${q.table.name} SET ${keys.map((key) => `${key} = ?`.trim()).join(', ')}`;
+  return `UPDATE ${q.table.name} SET ${keys.map((key) => `${key} = ?`).join(', ')}`;
 }
 
 export function buildDeleteQuery<

@@ -448,9 +448,7 @@ export class QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    Omit<Definition, 'queryType' | 'select'> & {
+    Definition & {
       queryType: typeof QueryType.SELECT;
       select: {
         [K in keyof Columns]: Columns[K] extends (col: never) => infer R
@@ -499,17 +497,23 @@ export class QueryBuilder<
       timestamp,
     } = getTimestamp(this.table);
 
-    if (isWithTimestamp) {
-      values = values.map((row) => ({
-        ...row,
-        ...(isHasCreatedAt && {
-          [createdAt]: row[createdAt as keyof typeof row] ?? timestamp,
-        }),
-        ...(isHasUpdatedAt && {
-          [updatedAt]: row[updatedAt as keyof typeof row] ?? timestamp,
-        }),
-      })) as AcceptedInsertValues<TableRef['columns']>;
-    }
+    values = values.map((row) => {
+      const fields: Record<string, unknown> = {};
+
+      for (const key in this.table.columns) {
+        fields[key] = row[key as keyof typeof row] ?? null;
+      }
+
+      if (isWithTimestamp && isHasCreatedAt) {
+        fields[createdAt] = row[createdAt as keyof typeof row] ?? timestamp;
+      }
+
+      if (isWithTimestamp && isHasUpdatedAt) {
+        fields[updatedAt] = row[updatedAt as keyof typeof row] ?? timestamp;
+      }
+
+      return fields;
+    }) as AcceptedInsertValues<TableRef['columns']>;
 
     this.definition.insertValues = values as AcceptedInsertValues<
       TableRef['columns']

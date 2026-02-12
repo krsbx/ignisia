@@ -52,10 +52,9 @@ export function addJoin<
     query.definition.joinedTables = {} as JoinedTables;
   }
 
-  query.definition.joinedTables = {
-    ...query.definition.joinedTables,
-    [alias]: joinTable,
-  };
+  (
+    query.definition.joinedTables as unknown as Record<string, typeof joinTable>
+  )[alias] = joinTable;
 
   return query as unknown as QueryBuilder<
     Alias,
