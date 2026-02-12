@@ -1,13 +1,9 @@
 import { generateHeaderEntries } from '../utilities';
-import {
-  HTML_INIT,
-  JSON_INIT,
-  NotFound,
-  StatusCode,
-  TEXT_PLAIN_INIT,
-} from './constants';
+import { HTML_INIT, NotFound, StatusCode } from './constants';
 import { ContextCookie } from './cookie';
 import { ContextRequest } from './request';
+
+const EMPTY_PARAMS = Object.freeze({});
 
 export class Context<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-constraint
@@ -16,24 +12,22 @@ export class Context<
   Query extends Record<string, string> = NonNullable<unknown>,
   State extends Record<string, unknown> = NonNullable<unknown>,
 > {
-  private _state: State | null;
+  private _state?: State;
   private _status: StatusCode;
-  private _headers: Record<string, string[]> | null;
-  private _cookie: ContextCookie | null;
+  private _headers?: Record<string, string[]>;
+  private _cookie?: ContextCookie;
   private _params: Params;
   private _request: Request;
-  private _req: ContextRequest<Values, Params, Query> | null;
-  private _res: Response | null;
+  private _req?: ContextRequest<Values, Params, Query>;
+  private _res?: Response;
 
-  public constructor(request: Request, params: Params = {} as Params) {
-    this._state = null;
+  public constructor(
+    request: Request,
+    params: Params = EMPTY_PARAMS as Params
+  ) {
     this._status = StatusCode.OK;
-    this._headers = null;
-    this._cookie = null;
     this._request = request;
     this._params = params;
-    this._req = null;
-    this._res = null;
   }
 
   public get rawRequest() {
@@ -67,7 +61,7 @@ export class Context<
     return this._cookie;
   }
 
-  public set res(res: Response | null) {
+  public set res(res: Response | undefined) {
     this._res = res;
   }
 
@@ -158,7 +152,7 @@ export class Context<
 
   public text(value: string) {
     if (!this._headers && this._status === StatusCode.OK) {
-      return new Response(value, TEXT_PLAIN_INIT);
+      return new Response(value);
     }
 
     return this.body(value, 'text/plain');
@@ -166,7 +160,7 @@ export class Context<
 
   public json<Value>(value: Value) {
     if (!this._headers && this._status === StatusCode.OK) {
-      return new Response(JSON.stringify(value), JSON_INIT);
+      return Response.json(value);
     }
 
     return this.body(JSON.stringify(value), 'application/json');

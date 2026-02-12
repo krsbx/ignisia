@@ -1,14 +1,9 @@
 import type { Context } from '../context';
-import type { Middleware, Route } from '../router/types';
+import type { Route } from '../router/types';
 
 export interface MatchResult {
   route: Route;
   params: Record<string, string>;
-}
-
-export interface MiddlewareComposerOptions {
-  ctx: Context;
-  middlewares: Middleware[];
 }
 
 export interface OnError<
@@ -34,4 +29,9 @@ export interface OnNotFound<
 export type ListenOptions = Omit<
   Bun.Serve.Options<undefined, never>,
   'fetch' | 'routes'
+>;
+
+export type CompiledRoutes = Record<
+  string,
+  Record<string, (req: Request) => Response | Promise<Response>>
 >;

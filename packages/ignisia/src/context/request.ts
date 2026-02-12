@@ -9,17 +9,20 @@ export class ContextRequest<
   Query extends Record<string, string | string[]> = NonNullable<unknown>,
 > {
   private _request: Request;
-  private _url: URL | null;
+  private _url?: URL;
   private _params: Params;
-  private _cache: Partial<ContextCache<Values>>;
-  private _query: Query | null;
+  private _cache?: Partial<ContextCache<Values>>;
+  private _query?: Query;
 
   public constructor(request: Request, params: Params) {
     this._request = request;
     this._params = params;
-    this._url = null;
-    this._cache = {};
-    this._query = null;
+  }
+
+  private get cache() {
+    if (!this._cache) this._cache = {};
+
+    return this._cache;
   }
 
   /** Do not call this method, it is for internal use only */
@@ -59,54 +62,54 @@ export class ContextRequest<
   public header(key: string): string | null;
   public header(key?: string) {
     if (key) {
-      if (this._cache.headers) {
+      if (this._cache?.headers) {
         return this._cache.headers[key.toLowerCase()] || null;
       }
 
       return this._request.headers.get(key);
     }
 
-    if (!this._cache.headers) {
-      this._cache.headers = {};
+    if (!this.cache.headers) {
+      this.cache.headers = {};
 
       for (const [key, value] of this._request.headers.entries()) {
-        this._cache.headers[key.toLowerCase()] = value;
+        this.cache.headers[key.toLowerCase()] = value;
       }
     }
 
-    return this._cache.headers;
+    return this.cache.headers;
   }
 
   public async json<T extends Values = any>(): Promise<T> {
-    if (!this._cache.json) {
-      this._cache.json = await this._request.json();
+    if (!this.cache.json) {
+      this.cache.json = await this._request.json();
     }
 
-    return this._cache.json as T;
+    return this.cache.json as T;
   }
 
   public async text(): Promise<string> {
-    if (!this._cache.text) {
-      this._cache.text = await this._request.text();
+    if (!this.cache.text) {
+      this.cache.text = await this._request.text();
     }
 
-    return this._cache.text;
+    return this.cache.text;
   }
 
   public async arrayBuffer(): Promise<ArrayBuffer> {
-    if (!this._cache.arrayBuffer) {
-      this._cache.arrayBuffer = await this._request.arrayBuffer();
+    if (!this.cache.arrayBuffer) {
+      this.cache.arrayBuffer = await this._request.arrayBuffer();
     }
 
-    return this._cache.arrayBuffer;
+    return this.cache.arrayBuffer;
   }
 
   public async blob(): Promise<Blob> {
-    if (!this._cache.blob) {
-      this._cache.blob = await this._request.blob();
+    if (!this.cache.blob) {
+      this.cache.blob = await this._request.blob();
     }
 
-    return this._cache.blob;
+    return this.cache.blob;
   }
 
   public async formData<
@@ -121,33 +124,31 @@ export class ContextRequest<
       ? ParsedForm<Values>
       : never,
   >(raw?: boolean) {
-    if (!this._cache.formData) {
-      this._cache.formData = await this._request.formData();
+    if (!this.cache.formData) {
+      this.cache.formData = await this._request.formData();
     }
 
-    if (raw) return this._cache.formData;
+    if (raw) return this.cache.formData;
 
-    if (!this._cache.parsedForm) {
-      this._cache.parsedForm = parseFormData(
-        this._cache.formData
-      ) as FinalValue;
+    if (!this.cache.parsedForm) {
+      this.cache.parsedForm = parseFormData(this.cache.formData) as FinalValue;
     }
 
-    return this._cache.parsedForm as FinalValue;
+    return this.cache.parsedForm as FinalValue;
   }
 
   public cookies(): Record<string, string>;
   public cookies(key: string): string;
   public cookies(key?: string) {
-    if (!this._cache.cookies) {
-      this._cache.cookies = parseCookies(this._request.headers.get('cookie'));
+    if (!this.cache.cookies) {
+      this.cache.cookies = parseCookies(this._request.headers.get('cookie'));
     }
 
     if (key) {
-      return this._cache.cookies[key];
+      return this.cache.cookies[key];
     }
 
-    return this._cache.cookies;
+    return this.cache.cookies;
   }
 
   public get url() {

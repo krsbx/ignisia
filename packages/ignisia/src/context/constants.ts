@@ -115,10 +115,6 @@ export const InternalServerError = Response.json(
   }
 );
 
-export const TEXT_PLAIN_HEADERS = new Headers({ 'Content-Type': 'text/plain' });
-export const JSON_HEADERS = new Headers({ 'Content-Type': 'application/json' });
-export const HTML_HEADERS = new Headers({ 'Content-Type': 'text/html' });
-
-export const TEXT_PLAIN_INIT: ResponseInit = { headers: TEXT_PLAIN_HEADERS };
-export const JSON_INIT: ResponseInit = { headers: JSON_HEADERS };
-export const HTML_INIT: ResponseInit = { headers: HTML_HEADERS };
+export const HTML_INIT: ResponseInit = {
+  headers: { 'Content-Type': 'text/html' },
+};

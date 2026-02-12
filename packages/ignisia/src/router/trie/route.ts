@@ -6,18 +6,14 @@ const EMPTY_PARAMS: Record<string, string> = Object.freeze({});
 
 export class TrieRouteNode {
   public children: Record<string, TrieRouteNode>;
-  public paramChild: TrieRouteNode | null;
-  public wildcardChild: TrieRouteNode | null;
-  public paramName: string | null;
-  public wildcardName: string | null;
+  public paramChild?: TrieRouteNode;
+  public wildcardChild?: TrieRouteNode;
+  public paramName?: string;
+  public wildcardName?: string;
   public routes: Partial<Record<ApiMethod, Route>>;
 
   public constructor() {
     this.children = {};
-    this.paramChild = null;
-    this.wildcardChild = null;
-    this.paramName = null;
-    this.wildcardName = null;
     this.routes = {};
   }
 
