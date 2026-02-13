@@ -4,6 +4,7 @@ import { quoteIdentifier } from '../utilities';
 import {
   having,
   havingNot,
+  on,
   or,
   orGroup,
   orNot,
@@ -116,15 +117,19 @@ export class QueryBuilder<
   public where: QueryContract['where'];
   public and: QueryContract['where'];
   public or: QueryContract['or'];
+  public on: QueryContract['on'];
   public having: QueryContract['having'];
 
   public whereGroup: QueryContract['whereGroup'];
   public orGroup: QueryContract['orGroup'];
   public readonly not: QueryContract['not'];
 
-  constructor(table: TableRef) {
+  public readonly joining: boolean;
+
+  constructor(table: TableRef, joining: boolean = false) {
     this.hooks = {};
     this.table = table;
+    this.joining = joining;
     this.definition = {
       queryType: null,
       select: null,
@@ -163,6 +168,7 @@ export class QueryBuilder<
 
     this.and = this.where as this['and'];
     this.or = or.bind(this) as this['or'];
+    this.on = on.bind(this) as this['on'];
 
     this.whereGroup = whereGroup.bind(this) as unknown as this['whereGroup'];
     this.orGroup = orGroup.bind(this) as unknown as this['orGroup'];

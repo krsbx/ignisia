@@ -100,6 +100,43 @@ export function or<
   );
 }
 
+export function on<
+  Alias extends string,
+  TableRef extends Table<string, Record<string, Column>>,
+  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
+  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
+  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
+  StrictAllowedColumn extends StrictColumnSelector<
+    Alias,
+    TableRef,
+    JoinedTables
+  >,
+  ColName extends StrictAllowedColumn,
+  Operator extends typeof AcceptedOperator.EQ | typeof AcceptedOperator.NE,
+>(
+  this: QueryBuilder<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+  columnA: ColName,
+  operator: Operator,
+  columnB: ColName
+) {
+  return addCondition(
+    this,
+    ConditionClause.WHERE,
+    columnA,
+    operator,
+    columnB,
+    LogicalOperator.ON,
+    false
+  );
+}
+
 export function having<
   Alias extends string,
   TableRef extends Table<string, Record<string, Column>>,

@@ -364,6 +364,43 @@ export interface QueryConditionContract<
     >
   >;
 
+  on<
+    ColName extends StrictAllowedColumn,
+    Operator extends typeof AcceptedOperator.EQ | typeof AcceptedOperator.NE,
+  >(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >,
+    columnA: ColName,
+    operator: Operator,
+    columnB: ColName
+  ): ReturnType<
+    typeof addCondition<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn,
+      typeof ConditionClause.WHERE,
+      ColName,
+      ColName extends `${infer TableAlias}.${infer TableColumn}`
+        ? TableAlias extends Alias
+          ? TableRef['columns'][TableColumn]
+          : JoinedTables[TableAlias]['columns'][TableColumn]
+        : never,
+      Operator,
+      ColName,
+      typeof LogicalOperator.ON,
+      Lowercase<typeof ConditionClause.WHERE>
+    >
+  >;
+
   having<
     ColName extends StrictAllowedColumn,
     Col extends ColName extends `${infer TableAlias}.${infer TableColumn}`

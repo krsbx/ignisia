@@ -1,6 +1,7 @@
 export const LogicalOperator = {
   AND: 'AND',
   OR: 'OR',
+  ON: 'ON',
 } as const;
 
 export type LogicalOperator =

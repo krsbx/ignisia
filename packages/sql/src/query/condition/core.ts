@@ -56,12 +56,23 @@ export function addCondition<
     throw new Error('No DB Dialect defined');
   }
 
+  const isOn = logical === LogicalOperator.ON;
+
   const validClause = clause.toLowerCase() as ValidClause;
-  const condition = getCondition(query.table.dialect, column, operator, value);
+  let condition = getCondition(query.table.dialect, column, operator, value);
+
+  if (isOn) {
+    condition = condition.replace('?', value as string);
+  }
 
   if (!query.definition[validClause]) query.definition[validClause] = [];
 
-  const logicalPrefix = query.definition[validClause].length > 0 ? logical : '';
+  const logicalPrefix =
+    query.definition[validClause].length > 0
+      ? isOn
+        ? LogicalOperator.AND
+        : logical
+      : '';
   const not = negate ? 'NOT ' : '';
 
   query.definition[validClause].push(
@@ -84,14 +95,16 @@ export function addCondition<
 
   if (!query.definition.params) query.definition.params = [];
 
-  if (operator === AcceptedOperator.STARTS_WITH) {
-    query.definition.params.push(`${value}%`);
-  } else if (operator === AcceptedOperator.ENDS_WITH) {
-    query.definition.params.push(`%${value}`);
-  } else if (Array.isArray(value)) {
-    query.definition.params.push(...value);
-  } else {
-    query.definition.params.push(value);
+  if (!isOn) {
+    if (operator === AcceptedOperator.STARTS_WITH) {
+      query.definition.params.push(`${value}%`);
+    } else if (operator === AcceptedOperator.ENDS_WITH) {
+      query.definition.params.push(`%${value}`);
+    } else if (Array.isArray(value)) {
+      query.definition.params.push(...value);
+    } else {
+      query.definition.params.push(value);
+    }
   }
 
   return query as unknown as QueryBuilder<
