@@ -124,12 +124,9 @@ export class QueryBuilder<
   public orGroup: QueryContract['orGroup'];
   public readonly not: QueryContract['not'];
 
-  public readonly joining: boolean;
-
-  constructor(table: TableRef, joining: boolean = false) {
+  constructor(table: TableRef) {
     this.hooks = {};
     this.table = table;
-    this.joining = joining;
     this.definition = {
       queryType: null,
       select: null,

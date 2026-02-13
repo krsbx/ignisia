@@ -91,27 +91,26 @@ export function prepareJoin<
       FinalJoinedTables extends JoinedTables & {
         [K in JoinAlias]: JoinTable;
       },
+      ReturnedJoinedTables extends FinalJoinedTables = FinalJoinedTables,
     >(
       callback: (
         q: QueryBuilder<Alias, TableRef, FinalJoinedTables>
-      ) => QueryBuilder<Alias, TableRef, FinalJoinedTables>
+      ) => QueryBuilder<Alias, TableRef, ReturnedJoinedTables>
     ) {
-      const sub = callback(
-        new QueryBuilder<Alias, TableRef, FinalJoinedTables>(query.table, true)
-      );
+      const sub = callback(new QueryBuilder(query.table));
 
       const subDef = sub.definition as Partial<
-        QueryDefinition<Alias, TableRef, JoinedTables>
+        QueryDefinition<Alias, TableRef, ReturnedJoinedTables>
       >;
 
       if (!subDef.where?.length) {
         return query as unknown as QueryBuilder<
           Alias,
           TableRef,
-          FinalJoinedTables,
+          ReturnedJoinedTables,
           Omit<Definition, 'joins' | 'joinedTables'> & {
             joins: string[];
-            joinedTables: FinalJoinedTables;
+            joinedTables: ReturnedJoinedTables;
           }
         >;
       }
@@ -144,13 +143,17 @@ export function prepareJoin<
         >
       )[alias] = joinTable;
 
+      if (subDef.joinedTables) {
+        Object.assign(query.definition.joinedTables, subDef.joinedTables);
+      }
+
       return query as unknown as QueryBuilder<
         Alias,
         TableRef,
-        FinalJoinedTables,
+        ReturnedJoinedTables,
         Omit<Definition, 'joins' | 'joinedTables'> & {
           joins: string[];
-          joinedTables: FinalJoinedTables;
+          joinedTables: ReturnedJoinedTables;
         }
       >;
     },
