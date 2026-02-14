@@ -48,14 +48,7 @@ export class Column<
       this.enums = options.values as readonly Value[];
     }
 
-    this.definition = {
-      autoIncrement: false,
-      primaryKey: false,
-      notNull: false,
-      unique: false,
-      comment: null,
-      default: undefined,
-    } as Definition;
+    this.definition = {} as Definition;
   }
 
   public static define<

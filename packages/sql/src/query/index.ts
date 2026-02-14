@@ -131,23 +131,7 @@ export class QueryBuilder<
     this.hooks = {};
     this.table = table;
     this.definition = {
-      queryType: null,
-      select: null,
-      having: null,
-      where: null,
-      params: null,
-      limit: null,
-      offset: null,
-      groupBy: null,
-      insertValues: null,
-      updateValues: null,
-      orderBy: null,
-      aggregates: null,
-      joins: null,
-      distinct: null,
       baseAlias: table.name,
-      joinedTables: null,
-      withDeleted: null,
     } as Definition;
 
     this.alias = alias.bind(this) as this['alias'];
