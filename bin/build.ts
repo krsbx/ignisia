@@ -10,6 +10,7 @@ const series: PackagePath[] = [
   'packages/sql',
   'packages/ignisia',
   'packages/securedb',
+  'packages/replica',
 ];
 
 function logBuild(dir: string | string[]) {

@@ -42,6 +42,11 @@
       "import": "./dist/esm/query/index.js",
       "require": "./dist/cjs/query/index.js"
     },
+    "./query/condition": {
+      "types": "./dist/esm/query/condition/index.d.ts",
+      "import": "./dist/esm/query/condition/index.js",
+      "require": "./dist/cjs/query/condition/index.js"
+    },
     "./table": {
       "types": "./dist/esm/table/index.d.ts",
       "import": "./dist/esm/table/index.js",
