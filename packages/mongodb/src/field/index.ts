@@ -42,10 +42,7 @@ export class Field<
     this.type = options.type;
     this.enums = [];
     this.fields = null as unknown as Fields;
-    this.definition = {
-      default: undefined,
-      notNull: false,
-    } as Definition;
+    this.definition = {} as Definition;
 
     if ('values' in options) {
       this.enums = options.values as readonly Value[];
@@ -76,9 +73,7 @@ export class Field<
       ColValue,
       Value,
       Fields,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      Omit<Definition, 'default'> & { default: FinalValue }
+      Definition & { default: FinalValue }
     >;
   }
 

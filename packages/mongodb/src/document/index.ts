@@ -9,10 +9,12 @@ import { defineFields } from './utilities';
 export class Document<
   DocumentName extends string,
   Fields extends Record<string, Field>,
-  CreatedAt extends string | boolean,
-  UpdatedAt extends string | boolean,
-  Timestamp extends TimestampOptions<CreatedAt, UpdatedAt> | boolean,
-  Paranoid extends string | boolean,
+  CreatedAt extends string | boolean = string | boolean,
+  UpdatedAt extends string | boolean = string | boolean,
+  Timestamp extends TimestampOptions<CreatedAt, UpdatedAt> | boolean =
+    | TimestampOptions<CreatedAt, UpdatedAt>
+    | boolean,
+  Paranoid extends string | boolean = string | boolean,
 > {
   public readonly name: DocumentName;
   public readonly fields: Fields;
