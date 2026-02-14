@@ -1,4 +1,4 @@
-import { AcceptedFieldTypes } from './constants';
+import type { AcceptedFieldTypes } from './constant';
 import type {
   AcceptedColumnTypeMap,
   ArrayOptions,
@@ -38,7 +38,7 @@ export class Field<
     Definition
   >;
 
-  protected constructor(options: Options) {
+  constructor(options: Options) {
     this.type = options.type;
     this.enums = [];
     this.fields = null as unknown as Fields;
@@ -76,7 +76,9 @@ export class Field<
       ColValue,
       Value,
       Fields,
-      Definition & { default: FinalValue }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      Omit<Definition, 'default'> & { default: FinalValue }
     >;
   }
 
@@ -90,7 +92,7 @@ export class Field<
       ColValue,
       Value,
       Fields,
-      Definition & { notNull: true }
+      Omit<Definition, 'notNull'> & { notNull: true }
     >;
   }
 
