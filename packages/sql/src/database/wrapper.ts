@@ -60,37 +60,7 @@ export class BaseSql<
       return client.unsafe(options.sql) as T;
     }
 
-    const params = (options.params ?? []).map((param: unknown) => {
-      // Allow null, strings, numbers, booleans, bigint
-      if (
-        param === null ||
-        typeof param === 'string' ||
-        typeof param === 'number' ||
-        typeof param === 'boolean' ||
-        typeof param === 'bigint'
-      ) {
-        return param;
-      }
-
-      // Reject undefined and objects to prevent injection
-      if (param === undefined) {
-        return null;
-      }
-
-      // For Date objects, convert to ISO string
-      if (param instanceof Date) {
-        return param.toISOString();
-      }
-
-      // For other objects/arrays, convert to JSON string
-      try {
-        return JSON.stringify(param);
-      } catch {
-        return null;
-      }
-    });
-
-    return client.unsafe(options.sql, params) as T;
+    return client.unsafe(options.sql, options.params) as T;
   }
 
   public async transaction<T, U extends (tx: TransactionSQL) => Promise<T>>(

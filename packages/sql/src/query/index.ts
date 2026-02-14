@@ -25,7 +25,7 @@ import type {
 } from './contract';
 import { aggregateCol, alias, clone, col } from './helper';
 import { addNoOnJoin, prepareJoin } from './join';
-import { exec, toQuery, toString } from './sql';
+import { exec, explain, toDebugString, toQuery, toString } from './sql';
 import type {
   AcceptedInsertValues,
   AcceptedOrderBy,
@@ -33,8 +33,8 @@ import type {
   AggregateColumn,
   AliasedColumn,
   ColumnSelector,
-  QuerHooks,
   QueryDefinition,
+  QueryHooks,
   QueryOutput,
   RawColumn,
   StrictColumnSelector,
@@ -92,7 +92,7 @@ export class QueryBuilder<
     StrictAllowedColumn
   >,
 > {
-  public readonly hooks: Partial<QuerHooks>;
+  public readonly hooks: Partial<QueryHooks>;
   public readonly table: TableRef;
   public readonly definition: Definition;
   public readonly _output!: QueryOutput<
@@ -108,6 +108,8 @@ export class QueryBuilder<
 
   public toQuery: TransformerContract['toQuery'];
   public toString: TransformerContract['toString'];
+  public toDebugString: TransformerContract['toDebugString'];
+  public explain: TransformerContract['explain'];
   public exec: TransformerContract['exec'];
 
   public rawWhere: QueryContract['rawWhere'];
@@ -153,6 +155,8 @@ export class QueryBuilder<
 
     this.toQuery = toQuery.bind(this) as this['toQuery'];
     this.toString = toString.bind(this) as this['toString'];
+    this.toDebugString = toDebugString.bind(this) as this['toDebugString'];
+    this.explain = explain.bind(this) as this['explain'];
     this.exec = exec.bind(this) as this['exec'];
 
     this.rawWhere = rawWhere.bind(this) as this['rawWhere'];

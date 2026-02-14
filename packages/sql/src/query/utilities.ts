@@ -406,3 +406,35 @@ export function parseAliasedRow({
 
   return result;
 }
+
+export function sanitizeParams(params: unknown[]) {
+  return params.map((param: unknown) => {
+    // Allow null, strings, numbers, booleans, bigint
+    if (
+      param === null ||
+      typeof param === 'string' ||
+      typeof param === 'number' ||
+      typeof param === 'boolean' ||
+      typeof param === 'bigint'
+    ) {
+      return param;
+    }
+
+    // Convert undefined to null
+    if (param === undefined) {
+      return null;
+    }
+
+    // Convert Date objects to ISO string
+    if (param instanceof Date) {
+      return param.toISOString();
+    }
+
+    // Convert arrays and objects to JSON
+    try {
+      return JSON.stringify(param);
+    } catch {
+      return null;
+    }
+  });
+}

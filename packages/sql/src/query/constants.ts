@@ -88,3 +88,24 @@ export const QueryHooksType = {
 
 export type QueryHooksType =
   (typeof QueryHooksType)[keyof typeof QueryHooksType];
+
+export const ExplainFormat = {
+  JSON: 'JSON',
+  TEXT: 'TEXT',
+  YAML: 'YAML',
+  XML: 'XML',
+} as const;
+
+export type ExplainFormat = (typeof ExplainFormat)[keyof typeof ExplainFormat];
+
+export const ExplainClause = {
+  FORMAT: 'FORMAT',
+  ANALYZE: 'ANALYZE',
+  VERBOSE: 'VERBOSE',
+  COSTS: 'COSTS',
+  BUFFERS: 'BUFFERS',
+  SUMMARY: 'SUMMARY',
+  TIMING: 'TIMING',
+} as const;
+
+export type ExplainClause = (typeof ExplainClause)[keyof typeof ExplainClause];

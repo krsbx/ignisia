@@ -9,9 +9,10 @@ import {
   buildSelectQuery,
   buildUpdateQuery,
 } from './builder';
-import { QueryHooksType, QueryType } from './constants';
+import { ExplainClause, QueryHooksType, QueryType } from './constants';
 import type {
   ColumnSelector,
+  ExplainOptions,
   QueryDefinition,
   StrictColumnSelector,
 } from './types';
@@ -19,6 +20,7 @@ import {
   getGroupByConditions,
   getWhereConditions,
   parseAliasedRow,
+  sanitizeParams,
 } from './utilities';
 
 export function buildQuery(query: string) {
@@ -153,6 +155,115 @@ export function toString<
   >,
 >(this: Query) {
   return this.toQuery().query;
+}
+
+export function toDebugString<
+  Alias extends string,
+  TableRef extends Table<string, Record<string, Column>>,
+  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
+  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
+  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
+  StrictAllowedColumn extends StrictColumnSelector<
+    Alias,
+    TableRef,
+    JoinedTables
+  >,
+  Query extends QueryBuilder<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+>(this: Query) {
+  const { query, params } = this.toQuery();
+
+  if (!params || params.length === 0) {
+    return query;
+  }
+
+  // Replace $1, $2, etc. with sanitized parameter values
+  let debugQuery = query;
+
+  sanitizeParams(params).forEach((param, index) => {
+    const value =
+      param === null ? 'NULL' : `'${String(param).replace(/'/g, "''")}'`;
+
+    debugQuery = debugQuery.replace(
+      new RegExp(`\\$${index + 1}\\b`, 'g'),
+      value
+    );
+  });
+
+  return debugQuery;
+}
+
+export function explain<
+  Alias extends string,
+  TableRef extends Table<string, Record<string, Column>>,
+  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
+  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
+  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
+  StrictAllowedColumn extends StrictColumnSelector<
+    Alias,
+    TableRef,
+    JoinedTables
+  >,
+  Query extends QueryBuilder<
+    Alias,
+    TableRef,
+    JoinedTables,
+    Definition,
+    AllowedColumn,
+    StrictAllowedColumn
+  >,
+>(this: Query, options?: ExplainOptions) {
+  const { query, params } = this.toQuery();
+
+  const clauses: string[] = [];
+
+  if (options?.format) {
+    clauses.push(`${ExplainClause.FORMAT} ${options.format}`);
+  }
+
+  if (options?.analyze) {
+    clauses.push(ExplainClause.ANALYZE);
+
+    if (options?.summary != null) {
+      clauses.push(
+        `${ExplainClause.SUMMARY} ${options.summary ? 'ON' : 'OFF'}`
+      );
+    }
+
+    if (options?.timing != null)
+      clauses.push(`${ExplainClause.TIMING} ${options.timing ? 'ON' : 'OFF'}`);
+  }
+
+  if (options?.verbose) {
+    clauses.push(`${ExplainClause.VERBOSE} ${options.verbose ? 'ON' : 'OFF'}`);
+  }
+
+  if (options?.costs != null) {
+    clauses.push(`${ExplainClause.COSTS} ${options.costs ? 'ON' : 'OFF'}`);
+  }
+
+  if (options?.buffers != null) {
+    clauses.push(`${ExplainClause.BUFFERS} ${options.buffers ? 'ON' : 'OFF'}`);
+  }
+
+  const explainPrefix = clauses.length
+    ? `EXPLAIN (${clauses.join(', ')}) `
+    : 'EXPLAIN ';
+
+  if (!this.table.client) {
+    throw new Error('Database client not defined');
+  }
+
+  return this.table.client.exec({
+    sql: `${explainPrefix}${query}`,
+    params,
+  });
 }
 
 export async function exec<

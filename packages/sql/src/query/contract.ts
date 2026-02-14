@@ -16,6 +16,7 @@ import type {
 import type { rawCol } from './helper';
 import type {
   ColumnSelector,
+  ExplainOptions,
   QueryDefinition,
   StrictColumnSelector,
   WhereValue,
@@ -58,6 +59,39 @@ export interface QueryTransformerContract<
       StrictAllowedColumn
     >
   ): string;
+
+  toDebugString(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >
+  ): string;
+
+  explain(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >
+  ): Promise<unknown>;
+  explain(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >,
+    options: ExplainOptions
+  ): Promise<unknown>;
 
   exec<
     This extends QueryBuilder<

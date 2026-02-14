@@ -1,3 +1,4 @@
+import type { TransactionSQL } from 'bun';
 import type { Column } from '../column';
 import type { AcceptedColumnTypes } from '../column/constants';
 import type { Table } from '../table';
@@ -5,6 +6,8 @@ import type { UnionToIntersection } from '../types';
 import type {
   AcceptedOperator,
   AggregationFunction,
+  ExplainClause,
+  ExplainFormat,
   OrderBy,
   QueryHooksType,
   QueryType,
@@ -343,7 +346,18 @@ export interface QueryRunHooks {
   (options: QueryRunHooksOptions): void;
 }
 
-export interface QuerHooks {
+export interface QueryHooks {
   after: Set<QueryRunHooks>;
   before: Set<QueryRunHooks>;
+}
+
+export interface ExplainOptions
+  extends Partial<
+    Record<
+      Lowercase<Exclude<ExplainClause, typeof ExplainClause.FORMAT>>,
+      boolean
+    >
+  > {
+  format?: ExplainFormat;
+  tx?: TransactionSQL | null;
 }

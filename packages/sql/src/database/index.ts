@@ -2,7 +2,7 @@ import type { TransactionSQL } from 'bun';
 import type { Column } from '../column';
 import type { QueryBuilder } from '../query';
 import type { QueryHooksType } from '../query/constants';
-import type { QuerHooks, QueryRunHooks } from '../query/types';
+import type { QueryHooks, QueryRunHooks } from '../query/types';
 import { Table } from '../table';
 import { Dialect } from '../table/constants';
 import {
@@ -35,7 +35,7 @@ export class Database<
     DatabaseDefinition<DbDialect>
   > = DatabaseDefinition<DbDialect>,
 > {
-  public readonly hooks: Partial<QuerHooks>;
+  public readonly hooks: Partial<QueryHooks>;
   public readonly dialect: DbDialect;
   public readonly defintion: Definition;
   public readonly tables: Tables;
