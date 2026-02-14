@@ -146,9 +146,7 @@ export function addGroupCondition<
   ) => QueryBuilder<Alias, TableRef, JoinedTables>,
   negate: boolean
 ) {
-  const sub = callback(
-    new QueryBuilder<Alias, TableRef, JoinedTables>(query.table)
-  );
+  const sub = callback(new QueryBuilder(query.table));
 
   const subDef = sub.definition as Partial<
     QueryDefinition<Alias, TableRef, JoinedTables>

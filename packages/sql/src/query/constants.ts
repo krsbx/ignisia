@@ -34,6 +34,10 @@ export const AcceptedOperator = {
   NOT_BETWEEN: 'notBetween',
   STARTS_WITH: 'startsWith',
   ENDS_WITH: 'endsWith',
+  REG_EXP: 'regExp',
+  NOT_REG_EXP: 'notRegExp',
+  RLIKE: 'rlike',
+  NOT_RLIKE: 'notRlike',
 } as const;
 
 export type AcceptedOperator =

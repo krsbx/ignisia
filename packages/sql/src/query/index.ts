@@ -1,5 +1,6 @@
 import type { Column } from '../column';
 import type { Table } from '../table';
+import type { Multiply, Subtract } from '../types';
 import { quoteIdentifier } from '../utilities';
 import {
   having,
@@ -476,6 +477,33 @@ export class QueryBuilder<
       TableRef,
       JoinedTables,
       Omit<Definition, 'queryType'> & { queryType: typeof QueryType.DELETE }
+    >;
+  }
+
+  public paginate<
+    Page extends number,
+    Size extends number,
+    Offset extends number = Multiply<Subtract<Page, 1>, Size>,
+  >(page: Page, size: Size) {
+    if (page < 1) {
+      throw new Error('Page number must be at least 1');
+    }
+
+    if (size < 1) {
+      throw new Error('Page size must be at least 1');
+    }
+
+    this.definition.limit = size;
+    this.definition.offset = (page - 1) * size;
+
+    return this as unknown as QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Omit<Definition, 'limit' | 'offset'> & {
+        limit: Size;
+        offset: Offset;
+      }
     >;
   }
 

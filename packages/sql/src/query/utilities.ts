@@ -107,6 +107,70 @@ export function getCondition<
     case AcceptedOperator.ENDS_WITH:
       return `${column as string} LIKE ?`;
 
+    case AcceptedOperator.REG_EXP: {
+      switch (dialect) {
+        case Dialect.POSTGRES:
+          return `${column as string} ~ ?`;
+
+        case Dialect.MYSQL:
+          return `${column as string} REGEXP ?`;
+
+        case Dialect.SQLITE:
+          return `${column as string} GLOB ?`;
+
+        default:
+          throw new Error('Operator not supported');
+      }
+    }
+
+    case AcceptedOperator.NOT_REG_EXP: {
+      switch (dialect) {
+        case Dialect.POSTGRES:
+          return `${column as string} !~ ?`;
+
+        case Dialect.MYSQL:
+          return `${column as string} NOT REGEXP ?`;
+
+        case Dialect.SQLITE:
+          return `${column as string} NOT GLOB ?`;
+
+        default:
+          throw new Error('Operator not supported');
+      }
+    }
+
+    case AcceptedOperator.RLIKE: {
+      switch (dialect) {
+        case Dialect.POSTGRES:
+          return `${column as string} ~* ?`;
+
+        case Dialect.MYSQL:
+          return `${column as string} RLIKE ?`;
+
+        case Dialect.SQLITE:
+          return `${column as string} GLOB ?`;
+
+        default:
+          throw new Error('Operator not supported');
+      }
+    }
+
+    case AcceptedOperator.NOT_RLIKE: {
+      switch (dialect) {
+        case Dialect.POSTGRES:
+          return `${column as string} !~* ?`;
+
+        case Dialect.MYSQL:
+          return `${column as string} NOT RLIKE ?`;
+
+        case Dialect.SQLITE:
+          return `${column as string} NOT GLOB ?`;
+
+        default:
+          throw new Error('Operator not supported');
+      }
+    }
+
     default:
       throw new Error('Invalid operator');
   }
