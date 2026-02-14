@@ -9,7 +9,8 @@ import {
   buildSelectQuery,
   buildUpdateQuery,
 } from './builder';
-import { ExplainClause, QueryHooksType, QueryType } from './constants';
+import { QueryHooksType, QueryType } from './constants';
+import { buildExplainQuery } from './explain';
 import type {
   ColumnSelector,
   ExplainOptions,
@@ -218,43 +219,10 @@ export function explain<
     AllowedColumn,
     StrictAllowedColumn
   >,
->(this: Query, options?: ExplainOptions) {
+>(this: Query, options: ExplainOptions = {}) {
   const { query, params } = this.toQuery();
 
-  const clauses: string[] = [];
-
-  if (options?.format) {
-    clauses.push(`${ExplainClause.FORMAT} ${options.format}`);
-  }
-
-  if (options?.analyze) {
-    clauses.push(ExplainClause.ANALYZE);
-
-    if (options?.summary != null) {
-      clauses.push(
-        `${ExplainClause.SUMMARY} ${options.summary ? 'ON' : 'OFF'}`
-      );
-    }
-
-    if (options?.timing != null)
-      clauses.push(`${ExplainClause.TIMING} ${options.timing ? 'ON' : 'OFF'}`);
-  }
-
-  if (options?.verbose) {
-    clauses.push(`${ExplainClause.VERBOSE} ${options.verbose ? 'ON' : 'OFF'}`);
-  }
-
-  if (options?.costs != null) {
-    clauses.push(`${ExplainClause.COSTS} ${options.costs ? 'ON' : 'OFF'}`);
-  }
-
-  if (options?.buffers != null) {
-    clauses.push(`${ExplainClause.BUFFERS} ${options.buffers ? 'ON' : 'OFF'}`);
-  }
-
-  const explainPrefix = clauses.length
-    ? `EXPLAIN (${clauses.join(', ')}) `
-    : 'EXPLAIN ';
+  const explainPrefix = buildExplainQuery(this, options);
 
   if (!this.table.client) {
     throw new Error('Database client not defined');
