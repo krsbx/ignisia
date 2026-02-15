@@ -1,5 +1,6 @@
 import type { ObjectId, Timestamp } from 'mongodb';
 import type { Field } from '.';
+import type { AstNode } from '../query/ast';
 import type { AcceptedFieldTypes } from './constant';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +128,7 @@ export type FieldOptions<
 export interface FieldDefinition<T> {
   notNull: boolean;
   default: T;
+  where: AstNode[];
 }
 
 export type PremitiveValueSelector<
