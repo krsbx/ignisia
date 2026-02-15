@@ -1,6 +1,7 @@
 import type { Document } from '../document';
 import type { Field } from '../field';
-import type { AcceptedOperator, OrderBy } from './constants';
+import type { GroupNode } from './ast';
+import type { AcceptedOperator, OrderBy, QueryType } from './constants';
 
 export type FieldSelector<
   Alias extends string,
@@ -32,25 +33,17 @@ export type StrictFieldSelector<
     }[keyof JoinedDocuments];
 
 export type WhereValue<T extends Field> = {
-  [K in AcceptedOperator]: K extends
-    | typeof AcceptedOperator.BETWEEN
-    | typeof AcceptedOperator.NOT_BETWEEN
+  [K in AcceptedOperator]: K extends typeof AcceptedOperator.BETWEEN
     ? [T['_output'], T['_output']]
-    : K extends typeof AcceptedOperator.IN | typeof AcceptedOperator.NOT_IN
+    : K extends typeof AcceptedOperator.IN
       ? T['_output'][]
-      : K extends
-            | typeof AcceptedOperator.IS_NULL
-            | typeof AcceptedOperator.IS_NOT_NULL
+      : K extends typeof AcceptedOperator.IS_NULL
         ? never
-        : K extends
-              | typeof AcceptedOperator.STARTS_WITH
-              | typeof AcceptedOperator.ENDS_WITH
-          ? T['_output']
-          : T['_output'];
+        : T['_output'];
 };
 
 export type AcceptedOrderBy<Fields extends string> = {
-  column: Fields;
+  field: Fields;
   direction: OrderBy;
 };
 
@@ -107,3 +100,97 @@ export type AliasedField<
 export type SelectableField<Allowed extends string> =
   | RawField<Allowed>
   | AliasedField<Allowed>;
+
+export interface QueryDefinition<
+  Alias extends string,
+  DocRef extends Document<string, Record<string, Field>>,
+  JoinedDocs extends Record<
+    string,
+    Document<string, Record<string, Field>>
+  > = NonNullable<unknown>,
+  AllowedField extends FieldSelector<Alias, DocRef, JoinedDocs> = FieldSelector<
+    Alias,
+    DocRef,
+    JoinedDocs
+  >,
+> {
+  queryType: QueryType;
+  select: SelectableField<AllowedField>[] | null;
+  baseAlias: Alias | null;
+  withDeleted: boolean | null;
+  joinedDocs: JoinedDocs | null;
+  where: GroupNode | null;
+  having: GroupNode | null;
+  on: GroupNode | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace AggregateStage {
+  type MatchStage = {
+    $match: Record<string, unknown>;
+  };
+
+  type ProjectStage = {
+    $project: Record<string, 0 | 1 | unknown>;
+  };
+
+  type GroupStage = {
+    $group: {
+      _id: unknown;
+    } & Record<string, unknown>;
+  };
+
+  type LookupStage = {
+    $lookup: {
+      from: string;
+      localField?: string;
+      foreignField?: string;
+      as: string;
+      let?: Record<string, unknown>;
+      pipeline?: PipelineStage;
+    };
+  };
+
+  type UnwindStage = {
+    $unwind:
+      | string
+      | {
+          path: string;
+          preserveNullAndEmptyArrays?: boolean;
+        };
+  };
+
+  type SortStage = {
+    $sort: Record<string, 1 | -1>;
+  };
+
+  type LimitStage = {
+    $limit: number;
+  };
+
+  type SkipStage = {
+    $skip: number;
+  };
+
+  type CountStage = {
+    $count: string;
+  };
+
+  type FacetStage = {
+    $facet: Record<string, PipelineStage>;
+  };
+
+  export type PipelineStage =
+    | MatchStage
+    | ProjectStage
+    | GroupStage
+    | LookupStage
+    | UnwindStage
+    | SortStage
+    | LimitStage
+    | SkipStage
+    | CountStage
+    | FacetStage;
+}
+
+export type PipelineStage = AggregateStage.PipelineStage;
