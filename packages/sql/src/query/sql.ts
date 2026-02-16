@@ -291,19 +291,31 @@ export async function exec<
     }
   }
 
-  let result = await client.exec<never[]>({
+  let result: never[] = [];
+  let mySqlResult: never[] = [];
+
+  // Workaround for MySQL to make DELETE queries behave the same across dialects
+  if (isMySQL && isDelete) {
+    const query = this.clone().select(`${this.table.name}.*` as AllowedColumn);
+
+    mySqlResult = await client.exec({
+      sql: query.toQuery().query,
+      params,
+      tx,
+    });
+  }
+
+  result = await client.exec<never[]>({
     sql: query,
     params,
     tx,
   });
 
-  // Workaround for MySQL to make UPDATE and DELETE queries behave the same across dialects
-  if (isMySQL && isReturning) {
-    // Clone the query object
-    const query = this.clone();
-    query.definition.queryType = QueryType.SELECT;
+  // Workaround for MySQL to make UPDATE queries behave the same across dialects
+  if (isMySQL && isUpdate) {
+    const query = this.clone().select(`${this.table.name}.*` as AllowedColumn);
 
-    result = await client.exec({
+    mySqlResult = await client.exec({
       sql: query.toQuery().query,
       params,
       tx,
@@ -321,7 +333,7 @@ export async function exec<
     }
   }
 
-  return result.map((r) =>
+  return (isMySQL && isReturning ? mySqlResult : result).map((r) =>
     parseAliasedRow({
       row: r,
       selects: this.definition.select ?? [],
