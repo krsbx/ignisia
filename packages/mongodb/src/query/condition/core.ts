@@ -72,7 +72,7 @@ export function addCondition<
   if (negate) {
     node = {
       type: AstType.NOT,
-      children: node,
+      child: node,
     };
   }
 
@@ -153,7 +153,7 @@ export function addGroupCondition<
   if (negate) {
     groupNode = {
       type: AstType.NOT,
-      children: groupNode,
+      child: groupNode,
     };
   }
 

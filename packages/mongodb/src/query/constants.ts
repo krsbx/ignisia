@@ -10,6 +10,7 @@ export const AstType = {
   GROUP: 'GROUP',
   COMPARISON: 'COMPARISON',
   NOT: 'NOT',
+  JOIN: 'JOIN',
 } as const;
 
 export type AstType = (typeof AstType)[keyof typeof AstType];
@@ -17,7 +18,6 @@ export type AstType = (typeof AstType)[keyof typeof AstType];
 export const ConditionClause = {
   WHERE: 'WHERE',
   HAVING: 'HAVING',
-  ON: 'ON',
 } as const;
 
 export type ConditionClause =
@@ -86,10 +86,6 @@ export type AggregationFunction =
 export const AcceptedJoin = {
   INNER: 'INNER',
   LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  FULL: 'FULL OUTER',
-  CROSS: 'CROSS',
-  NATURAL: 'NATURAL',
 } as const;
 
 export type AcceptedJoin = (typeof AcceptedJoin)[keyof typeof AcceptedJoin];

@@ -53,6 +53,45 @@ export function where<
   );
 }
 
+export function having<
+  Alias extends string,
+  DocRef extends Document<string, Record<string, Field>>,
+  JoinedDocs extends Record<string, Document<string, Record<string, Field>>>,
+  Definition extends Partial<QueryDefinition<Alias, DocRef, JoinedDocs>>,
+  AllowedField extends FieldSelector<Alias, DocRef, JoinedDocs>,
+  StrictAllowedField extends StrictFieldSelector<Alias, DocRef, JoinedDocs>,
+  FilName extends StrictAllowedField,
+  Fil extends FilName extends `${infer DocAlias}.${infer DocField}`
+    ? DocAlias extends Alias
+      ? DocRef['fields'][DocField]
+      : JoinedDocs[DocAlias]['fields'][DocField]
+    : never,
+  Operator extends AcceptedOperator,
+  Value extends WhereValue<Fil>[Operator],
+>(
+  this: QueryBuilder<
+    Alias,
+    DocRef,
+    JoinedDocs,
+    Definition,
+    AllowedField,
+    StrictAllowedField
+  >,
+  field: FilName,
+  operator: Operator,
+  value?: Value
+) {
+  return addCondition(
+    this,
+    ConditionClause.HAVING,
+    field,
+    operator,
+    (value || null) as Value,
+    LogicalOperator.AND,
+    false
+  );
+}
+
 export function or<
   Alias extends string,
   DocRef extends Document<string, Record<string, Field>>,

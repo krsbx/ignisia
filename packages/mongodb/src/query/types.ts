@@ -1,6 +1,6 @@
 import type { Document } from '../document';
 import type { Field } from '../field';
-import type { GroupNode } from './ast';
+import type { GroupNode, JoinNode } from './ast';
 import type { AcceptedOperator, OrderBy, QueryType } from './constants';
 
 export type FieldSelector<
@@ -118,12 +118,12 @@ export interface QueryDefinition<
   select: SelectableField<AllowedField>[] | null;
   where: GroupNode | null;
   having: GroupNode | null;
+  limit: number | null;
+  offset: number | null;
   insertValues: AcceptedInsertValues<DocRef['fields']> | null;
   updateValues: AcceptedUpdateValues<DocRef['fields']> | null;
   orderBy: AcceptedOrderBy<AllowedField>[] | null;
-  limit: number | null;
-  offset: number | null;
-  joins: GroupNode | null;
+  joins: JoinNode[] | null;
   baseAlias: Alias | null;
   withDeleted: boolean | null;
   joinedDocs: JoinedDocs | null;

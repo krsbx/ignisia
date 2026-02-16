@@ -2,14 +2,21 @@ import type { Document } from '../document';
 import type { Field } from '../field';
 import type { Multiply, Subtract } from '../types';
 import { quoteIdentifier } from '../utilities';
-import { or, orGroup, where, whereGroup } from './condition/common';
-import { orNot, orNotGroup, whereNot, whereNotGroup } from './condition/not';
-import { QueryType } from './constants';
+import { having, or, orGroup, where, whereGroup } from './condition/common';
+import {
+  havingNot,
+  orNot,
+  orNotGroup,
+  whereNot,
+  whereNotGroup,
+} from './condition/not';
+import { AcceptedJoin, QueryType } from './constants';
 import type {
   QueryConditionContract,
   QueryTransformerContract,
 } from './contract';
 import { alias, clone } from './helper';
+import { prepareJoin } from './join';
 import type {
   AcceptedInsertValues,
   AcceptedOrderBy,
@@ -78,6 +85,8 @@ export class QueryBuilder<
   public clone: TransformerContract['clone'];
 
   public where: QueryContract['where'];
+  public having: QueryContract['having'];
+
   public and: QueryContract['where'];
   public or: QueryContract['or'];
 
@@ -95,6 +104,7 @@ export class QueryBuilder<
     this.clone = clone.bind(this) as this['clone'];
 
     this.where = where.bind(this) as this['where'];
+    this.having = having.bind(this) as this['having'];
 
     this.and = this.where as this['and'];
     this.or = or.bind(this) as this['or'];
@@ -104,6 +114,7 @@ export class QueryBuilder<
 
     this.not = {
       where: whereNot.bind(this) as this['not']['where'],
+      having: havingNot.bind(this) as this['not']['having'],
       or: orNot.bind(this) as this['not']['or'],
 
       whereGroup: whereNotGroup.bind(
@@ -111,6 +122,20 @@ export class QueryBuilder<
       ) as unknown as this['not']['whereGroup'],
       orGroup: orNotGroup.bind(this) as unknown as this['not']['orGroup'],
     };
+  }
+
+  public leftJoin<
+    JoinDoc extends Document<string, Record<string, Field>>,
+    JoinAlias extends string,
+  >(joinDoc: JoinDoc, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.LEFT, joinDoc, alias);
+  }
+
+  public innerJoin<
+    JoinDoc extends Document<string, Record<string, Field>>,
+    JoinAlias extends string,
+  >(joinDoc: JoinDoc, alias: JoinAlias) {
+    return prepareJoin(this, AcceptedJoin.INNER, joinDoc, alias);
   }
 
   public limit<Limit extends number | null>(limit: Limit) {

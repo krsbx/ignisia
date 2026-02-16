@@ -49,7 +49,7 @@ export function whereNot<
     operator,
     (value || null) as Value,
     LogicalOperator.AND,
-    false
+    true
   );
 }
 
@@ -88,7 +88,46 @@ export function orNot<
     operator,
     (value || null) as Value,
     LogicalOperator.OR,
-    false
+    true
+  );
+}
+
+export function havingNot<
+  Alias extends string,
+  DocRef extends Document<string, Record<string, Field>>,
+  JoinedDocs extends Record<string, Document<string, Record<string, Field>>>,
+  Definition extends Partial<QueryDefinition<Alias, DocRef, JoinedDocs>>,
+  AllowedField extends FieldSelector<Alias, DocRef, JoinedDocs>,
+  StrictAllowedField extends StrictFieldSelector<Alias, DocRef, JoinedDocs>,
+  FilName extends StrictAllowedField,
+  Fil extends FilName extends `${infer DocAlias}.${infer DocField}`
+    ? DocAlias extends Alias
+      ? DocRef['fields'][DocField]
+      : JoinedDocs[DocAlias]['fields'][DocField]
+    : never,
+  Operator extends AcceptedOperator,
+  Value extends WhereValue<Fil>[Operator],
+>(
+  this: QueryBuilder<
+    Alias,
+    DocRef,
+    JoinedDocs,
+    Definition,
+    AllowedField,
+    StrictAllowedField
+  >,
+  field: FilName,
+  operator: Operator,
+  value?: Value
+) {
+  return addCondition(
+    this,
+    ConditionClause.HAVING,
+    field,
+    operator,
+    (value || null) as Value,
+    LogicalOperator.AND,
+    true
   );
 }
 
@@ -112,7 +151,7 @@ export function whereNotGroup<
     q: QueryBuilder<Alias, DocRef, JoinedDocs>
   ) => QueryBuilder<Alias, DocRef, JoinedDocs>
 ) {
-  return addGroupCondition(this, LogicalOperator.AND, callback, false);
+  return addGroupCondition(this, LogicalOperator.AND, callback, true);
 }
 
 export function orNotGroup<
@@ -135,5 +174,5 @@ export function orNotGroup<
     q: QueryBuilder<Alias, DocRef, JoinedDocs>
   ) => QueryBuilder<Alias, DocRef, JoinedDocs>
 ) {
-  return addGroupCondition(this, LogicalOperator.OR, callback, false);
+  return addGroupCondition(this, LogicalOperator.OR, callback, true);
 }

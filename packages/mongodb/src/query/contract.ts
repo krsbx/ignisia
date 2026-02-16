@@ -227,6 +227,49 @@ export interface QueryConditionContract<
     >
   >;
 
+  having<
+    FilName extends StrictAllowedField,
+    Fil extends FilName extends `${infer DocAlias}.${infer DocFil}`
+      ? DocAlias extends Alias
+        ? DocRef['fields'][DocFil]
+        : JoinedDocs[DocAlias]['fields'][DocFil]
+      : never,
+    Operator extends AcceptedOperator,
+    Value extends WhereValue<Fil>[Operator],
+  >(
+    this: QueryBuilder<
+      Alias,
+      DocRef,
+      JoinedDocs,
+      Definition,
+      AllowedField,
+      StrictAllowedField
+    >,
+    field: FilName,
+    operator: Operator,
+    value: Value
+  ): ReturnType<
+    typeof addCondition<
+      Alias,
+      DocRef,
+      JoinedDocs,
+      Definition,
+      AllowedField,
+      StrictAllowedField,
+      typeof ConditionClause.HAVING,
+      FilName,
+      FilName extends `${infer DocAlias}.${infer DocFil}`
+        ? DocAlias extends Alias
+          ? DocRef['fields'][DocFil]
+          : JoinedDocs[DocAlias]['fields'][DocFil]
+        : never,
+      Operator,
+      Value,
+      typeof LogicalOperator.AND,
+      Lowercase<typeof ConditionClause.HAVING>
+    >
+  >;
+
   whereGroup(
     this: QueryBuilder<
       Alias,
@@ -441,6 +484,49 @@ export interface QueryConditionContract<
         Value,
         typeof LogicalOperator.OR,
         Lowercase<typeof ConditionClause.WHERE>
+      >
+    >;
+
+    having<
+      FilName extends StrictAllowedField,
+      Fil extends FilName extends `${infer DocAlias}.${infer DocFil}`
+        ? DocAlias extends Alias
+          ? DocRef['fields'][DocFil]
+          : JoinedDocs[DocAlias]['fields'][DocFil]
+        : never,
+      Operator extends AcceptedOperator,
+      Value extends WhereValue<Fil>[Operator],
+    >(
+      this: QueryBuilder<
+        Alias,
+        DocRef,
+        JoinedDocs,
+        Definition,
+        AllowedField,
+        StrictAllowedField
+      >,
+      field: FilName,
+      operator: Operator,
+      value: Value
+    ): ReturnType<
+      typeof addCondition<
+        Alias,
+        DocRef,
+        JoinedDocs,
+        Definition,
+        AllowedField,
+        StrictAllowedField,
+        typeof ConditionClause.HAVING,
+        FilName,
+        FilName extends `${infer DocAlias}.${infer DocFil}`
+          ? DocAlias extends Alias
+            ? DocRef['fields'][DocFil]
+            : JoinedDocs[DocAlias]['fields'][DocFil]
+          : never,
+        Operator,
+        Value,
+        typeof LogicalOperator.AND,
+        Lowercase<typeof ConditionClause.HAVING>
       >
     >;
 
