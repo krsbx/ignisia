@@ -129,6 +129,7 @@ export function toQuery<
   }
 
   if (
+    this.definition.queryType === QueryType.INSERT ||
     this.definition.queryType === QueryType.UPDATE ||
     this.definition.queryType === QueryType.DELETE
   ) {
@@ -265,9 +266,10 @@ export async function exec<
   const client = this.table.client;
   const dialect = this.table.dialect;
   const queryType = this.definition.queryType;
+  const isInsert = queryType === QueryType.INSERT;
   const isUpdate = queryType === QueryType.UPDATE;
   const isDelete = queryType === QueryType.DELETE;
-  const isReturning = isUpdate || isDelete;
+  const isReturning = isInsert || isUpdate || isDelete;
   const isMySQL = dialect === Dialect.MYSQL;
 
   if (!client) {
@@ -294,6 +296,11 @@ export async function exec<
   let result: never[] = [];
   let mySqlResult: never[] = [];
 
+  // Find primary key column for MySQL workarounds
+  const primaryKeyColumn = Object.entries(this.table.columns).find(
+    ([, col]) => (col.definition as { primaryKey?: boolean }).primaryKey
+  )?.[0];
+
   // Workaround for MySQL to make DELETE queries behave the same across dialects
   if (isMySQL && isDelete) {
     const query = this.clone().select(`${this.table.name}.*` as AllowedColumn);
@@ -305,11 +312,34 @@ export async function exec<
     });
   }
 
-  result = await client.exec<never[]>({
+  result = await client.exec({
     sql: query,
     params,
     tx,
   });
+
+  // Workaround for MySQL to make INSERT queries behave the same across dialects
+  // Uses Bun's built-in lastInsertRowid from the result object
+  if (isMySQL && isInsert && primaryKeyColumn) {
+    const insertResult = result as unknown as { lastInsertRowid: unknown };
+    const lastId = insertResult.lastInsertRowid;
+
+    if (lastId != null) {
+      const selectQuery = this.table
+        .query()
+        .where(
+          `${this.table.name}."${primaryKeyColumn}"`,
+          'eq',
+          lastId as never
+        );
+
+      mySqlResult = await client.exec({
+        sql: selectQuery.toQuery().query,
+        params: selectQuery.toQuery().params,
+        tx,
+      });
+    }
+  }
 
   // Workaround for MySQL to make UPDATE queries behave the same across dialects
   if (isMySQL && isUpdate) {
