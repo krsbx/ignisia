@@ -58,10 +58,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/krsbx/aio-web.git"
+    "url": "git+https://github.com/krsbx/ignisia.git"
   },
   "bugs": {
-    "url": "https://github.com/krsbx/aio-web/issues"
+    "url": "https://github.com/krsbx/ignisia/issues"
   },
   "keywords": [
     "bun",

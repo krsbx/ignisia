@@ -3,7 +3,7 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "exports": {
     ".": {
@@ -68,10 +68,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/krsbx/aio-web.git"
+    "url": "git+https://github.com/krsbx/ignisia.git"
   },
   "bugs": {
-    "url": "https://github.com/krsbx/aio-web/issues"
+    "url": "https://github.com/krsbx/ignisia/issues"
   },
   "keywords": [
     "bun",
