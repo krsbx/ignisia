@@ -106,7 +106,7 @@ export function buildInsertQuery<
     )
   );
 
-  return `INSERT INTO ${q.table.name} (${columns}) VALUES ${placeholders} RETURNING *`;
+  return `INSERT INTO ${q.table.name} (${columns}) VALUES ${placeholders}`;
 }
 
 export function buildUpdateQuery<
