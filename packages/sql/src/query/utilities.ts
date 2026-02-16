@@ -1,16 +1,14 @@
 import { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
-import { Dialect } from '../table/constants';
 import { quoteIdentifier } from '../utilities';
-import { AcceptedOperator, QueryType } from './constants';
+import { QueryType } from './constants';
 import type {
   AliasedColumn,
   ColumnSelector,
   QueryDefinition,
   SelectableColumn,
   StrictColumnSelector,
-  WhereValue,
 } from './types';
 
 export function getTableColumnNames<
@@ -36,144 +34,6 @@ export function getTableColumnNames<
     from,
     columns,
   };
-}
-
-export function getCondition<
-  DbDialect extends Dialect,
-  ColName extends string,
-  Operator extends AcceptedOperator,
-  Value extends WhereValue<Column>[Operator],
->(dialect: DbDialect, column: ColName, operator: Operator, value: Value) {
-  switch (operator) {
-    case AcceptedOperator.EQ:
-      return `${column as string} = ?`;
-
-    case AcceptedOperator.NE:
-      return `${column as string} != ?`;
-
-    case AcceptedOperator.GT:
-      return `${column as string} > ?`;
-
-    case AcceptedOperator.LT:
-      return `${column as string} < ?`;
-
-    case AcceptedOperator.GTE:
-      return `${column as string} >= ?`;
-
-    case AcceptedOperator.LTE:
-      return `${column as string} <= ?`;
-
-    case AcceptedOperator.IN:
-      return `${column as string} IN (${(value as never[]).map(() => '?').join(', ')})`;
-
-    case AcceptedOperator.NOT_IN:
-      return `${column as string} NOT IN (${(value as never[]).map(() => '?').join(', ')})`;
-
-    case AcceptedOperator.LIKE:
-      return `${column as string} LIKE ?`;
-
-    case AcceptedOperator.NOT_LIKE:
-      return `${column as string} NOT LIKE ?`;
-
-    case AcceptedOperator.ILIKE:
-      if (dialect === Dialect.POSTGRES) {
-        return `${column as string} ILIKE ?`;
-      }
-
-      return `LOWER(${column as string}) LIKE LOWER(?)`;
-
-    case AcceptedOperator.NOT_ILIKE:
-      if (dialect === Dialect.POSTGRES) {
-        return `${column as string} NOT ILIKE ?`;
-      }
-
-      return `LOWER(${column as string}) NOT LIKE LOWER(?)`;
-
-    case AcceptedOperator.IS_NULL:
-      return `${column as string} IS NULL`;
-
-    case AcceptedOperator.IS_NOT_NULL:
-      return `${column as string} IS NOT NULL`;
-
-    case AcceptedOperator.BETWEEN:
-      return `${column as string} BETWEEN ? AND ?`;
-
-    case AcceptedOperator.NOT_BETWEEN:
-      return `${column as string} NOT BETWEEN ? AND ?`;
-
-    case AcceptedOperator.STARTS_WITH:
-      return `${column as string} LIKE ?`;
-
-    case AcceptedOperator.ENDS_WITH:
-      return `${column as string} LIKE ?`;
-
-    case AcceptedOperator.REG_EXP: {
-      switch (dialect) {
-        case Dialect.POSTGRES:
-          return `${column as string} ~ ?`;
-
-        case Dialect.MYSQL:
-          return `${column as string} REGEXP ?`;
-
-        case Dialect.SQLITE:
-          return `${column as string} GLOB ?`;
-
-        default:
-          throw new Error('Operator not supported');
-      }
-    }
-
-    case AcceptedOperator.NOT_REG_EXP: {
-      switch (dialect) {
-        case Dialect.POSTGRES:
-          return `${column as string} !~ ?`;
-
-        case Dialect.MYSQL:
-          return `${column as string} NOT REGEXP ?`;
-
-        case Dialect.SQLITE:
-          return `${column as string} NOT GLOB ?`;
-
-        default:
-          throw new Error('Operator not supported');
-      }
-    }
-
-    case AcceptedOperator.RLIKE: {
-      switch (dialect) {
-        case Dialect.POSTGRES:
-          return `${column as string} ~* ?`;
-
-        case Dialect.MYSQL:
-          return `${column as string} RLIKE ?`;
-
-        case Dialect.SQLITE:
-          return `${column as string} GLOB ?`;
-
-        default:
-          throw new Error('Operator not supported');
-      }
-    }
-
-    case AcceptedOperator.NOT_RLIKE: {
-      switch (dialect) {
-        case Dialect.POSTGRES:
-          return `${column as string} !~* ?`;
-
-        case Dialect.MYSQL:
-          return `${column as string} NOT RLIKE ?`;
-
-        case Dialect.SQLITE:
-          return `${column as string} NOT GLOB ?`;
-
-        default:
-          throw new Error('Operator not supported');
-      }
-    }
-
-    default:
-      throw new Error('Invalid operator');
-  }
 }
 
 export function getTimestamp<
@@ -234,49 +94,6 @@ export function getParanoid<
     timestamp,
     deletedAt,
   };
-}
-
-export function getWhereConditions<
-  Alias extends string,
-  TableRef extends Table<string, Record<string, Column>>,
-  JoinedTables extends Record<string, Table<string, Record<string, Column>>>,
-  Definition extends Partial<QueryDefinition<Alias, TableRef, JoinedTables>>,
-  AllowedColumn extends ColumnSelector<Alias, TableRef, JoinedTables>,
-  StrictAllowedColumn extends StrictColumnSelector<
-    Alias,
-    TableRef,
-    JoinedTables
-  >,
-  Query extends QueryBuilder<
-    Alias,
-    TableRef,
-    JoinedTables,
-    Definition,
-    AllowedColumn,
-    StrictAllowedColumn
-  >,
->(q: Query) {
-  if (q.definition.queryType === QueryType.INSERT) return [];
-
-  const conditions: string[] = [];
-
-  const base = q.definition.baseAlias ?? q.table.name;
-  const { isWithParanoid, deletedAt } = getParanoid(q.table);
-  const withDeleted = !!q.definition.withDeleted;
-  const isHasConditions = !!q.definition.where?.length;
-
-  if (!withDeleted && isWithParanoid) {
-    const suffix = isHasConditions ? ' AND' : '';
-    const column = `${base}.${quoteIdentifier(deletedAt)}`;
-
-    conditions.unshift(`${column} IS NULL${suffix}`);
-  }
-
-  if (q.definition.where?.length) {
-    conditions.push(...q.definition.where);
-  }
-
-  return conditions;
 }
 
 export function getGroupByConditions<

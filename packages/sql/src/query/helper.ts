@@ -77,13 +77,6 @@ export function clone<
   return query;
 }
 
-export function rawCol<
-  StrictAllowedColumn extends string,
-  ColName extends StrictAllowedColumn = StrictAllowedColumn,
->(column: ColName) {
-  return column;
-}
-
 export function col<
   StrictAllowedColumn extends string,
   ColName extends StrictAllowedColumn = StrictAllowedColumn,

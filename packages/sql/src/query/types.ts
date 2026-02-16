@@ -3,6 +3,7 @@ import type { Column } from '../column';
 import type { AcceptedColumnTypes } from '../column/constants';
 import type { Table } from '../table';
 import type { UnionToIntersection } from '../types';
+import type { GroupNode, JoinNode } from './ast';
 import type {
   AcceptedOperator,
   AggregationFunction,
@@ -37,15 +38,11 @@ export type StrictColumnSelector<
     }[keyof JoinedTables];
 
 export type WhereValue<T extends Column> = {
-  [K in AcceptedOperator]: K extends
-    | typeof AcceptedOperator.BETWEEN
-    | typeof AcceptedOperator.NOT_BETWEEN
+  [K in AcceptedOperator]: K extends typeof AcceptedOperator.BETWEEN
     ? [T['_output'], T['_output']]
-    : K extends typeof AcceptedOperator.IN | typeof AcceptedOperator.NOT_IN
+    : K extends typeof AcceptedOperator.IN
       ? T['_output'][]
-      : K extends
-            | typeof AcceptedOperator.IS_NULL
-            | typeof AcceptedOperator.IS_NOT_NULL
+      : K extends typeof AcceptedOperator.IS_NULL
         ? never
         : K extends
               | typeof AcceptedOperator.STARTS_WITH
@@ -142,9 +139,8 @@ export interface QueryDefinition<
 > {
   queryType: QueryType | null;
   select: SelectableColumn<AllowedColumn>[] | null;
-  where: string[] | null;
-  having: string[] | null;
-  params: unknown[] | null;
+  where: GroupNode;
+  having: GroupNode;
   limit: number | null;
   offset: number | null;
   groupBy: AllowedColumn[] | null;
@@ -153,7 +149,7 @@ export interface QueryDefinition<
   orderBy: AcceptedOrderBy<AllowedColumn>[] | null;
   aggregates: AggregateColumn<AllowedColumn>[] | null;
   distinct: boolean | null;
-  joins: string[] | null;
+  joins: JoinNode[];
   baseAlias: Alias | null;
   withDeleted: boolean | null;
   joinedTables: JoinedTables | null;

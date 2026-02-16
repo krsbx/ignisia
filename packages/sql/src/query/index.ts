@@ -5,14 +5,10 @@ import { quoteIdentifier } from '../utilities';
 import {
   having,
   havingNot,
-  on,
   or,
   orGroup,
   orNot,
   orNotGroup,
-  rawHaving,
-  rawOr,
-  rawWhere,
   where,
   whereGroup,
   whereNot,
@@ -112,15 +108,9 @@ export class QueryBuilder<
   public explain: TransformerContract['explain'];
   public exec: TransformerContract['exec'];
 
-  public rawWhere: QueryContract['rawWhere'];
-  public rawAnd: QueryContract['rawWhere'];
-  public rawOr: QueryContract['rawOr'];
-  public rawHaving: QueryContract['rawHaving'];
-
   public where: QueryContract['where'];
   public and: QueryContract['where'];
   public or: QueryContract['or'];
-  public on: QueryContract['on'];
   public having: QueryContract['having'];
 
   public whereGroup: QueryContract['whereGroup'];
@@ -143,18 +133,11 @@ export class QueryBuilder<
     this.explain = explain.bind(this) as this['explain'];
     this.exec = exec.bind(this) as this['exec'];
 
-    this.rawWhere = rawWhere.bind(this) as this['rawWhere'];
-    this.rawHaving = rawHaving.bind(this) as this['rawHaving'];
-
-    this.rawAnd = this.rawWhere;
-    this.rawOr = rawOr.bind(this) as this['rawOr'];
-
     this.where = where.bind(this) as this['where'];
     this.having = having.bind(this) as this['having'];
 
     this.and = this.where as this['and'];
     this.or = or.bind(this) as this['or'];
-    this.on = on.bind(this) as this['on'];
 
     this.whereGroup = whereGroup.bind(this) as unknown as this['whereGroup'];
     this.orGroup = orGroup.bind(this) as unknown as this['orGroup'];
@@ -210,7 +193,7 @@ export class QueryBuilder<
     JoinTable extends Table<string, Record<string, Column>>,
     JoinAlias extends string,
   >(joinTable: JoinTable, alias: JoinAlias) {
-    return prepareJoin(this, AcceptedJoin.NATURAL, joinTable, alias);
+    return addNoOnJoin(this, AcceptedJoin.NATURAL, joinTable, alias);
   }
 
   public distinct() {

@@ -1,7 +1,8 @@
 import { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
-import type { AcceptedJoin } from './constants';
+import type { AstNode, JoinNode } from './ast';
+import { AstType, type AcceptedJoin } from './constants';
 import type {
   ColumnSelector,
   QueryDefinition,
@@ -38,7 +39,12 @@ export function addNoOnJoin<
 ) {
   if (!query.definition.joins) query.definition.joins = [];
 
-  query.definition.joins.push(`${joinType} JOIN ${joinTable.name} AS ${alias}`);
+  query.definition.joins.push({
+    type: AstType.JOIN,
+    alias,
+    join: joinType as never,
+    table: joinTable,
+  });
 
   if (!query.definition.joinedTables) {
     query.definition.joinedTables = {} as JoinedTables;
@@ -53,7 +59,7 @@ export function addNoOnJoin<
     TableRef,
     FinalJoinedTables,
     Omit<Definition, 'joins' | 'joinedTables'> & {
-      joins: string[];
+      joins: JoinNode[];
       joinedTables: FinalJoinedTables;
     }
   >;
@@ -103,33 +109,34 @@ export function prepareJoin<
         QueryDefinition<Alias, TableRef, ReturnedJoinedTables>
       >;
 
-      if (!subDef.where?.length) {
+      if (!subDef.where) {
         return query as unknown as QueryBuilder<
           Alias,
           TableRef,
           ReturnedJoinedTables,
           Omit<Definition, 'joins' | 'joinedTables'> & {
-            joins: string[];
+            joins: JoinNode[];
             joinedTables: ReturnedJoinedTables;
           }
         >;
       }
 
-      const grouped = `(${subDef.where.join(' ')})`;
+      if (!query.definition.joins) {
+        query.definition.joins = [];
+      }
 
-      if (!query.definition.joins) query.definition.joins = [];
+      const on: AstNode = subDef.where;
 
-      query.definition.joins.push(
-        `${joinType} JOIN ${joinTable.name} AS ${alias} ON ${grouped}`
-      );
+      query.definition.joins.push({
+        type: AstType.JOIN,
+        alias,
+        join: joinType as never,
+        table: joinTable,
+        on,
+      });
 
       if (subDef.joins?.length) {
         query.definition.joins.push(...subDef.joins);
-      }
-
-      if (subDef.params?.length) {
-        if (!query.definition.params) query.definition.params = [];
-        query.definition.params.push(...subDef.params);
       }
 
       if (!query.definition.joinedTables) {
@@ -152,7 +159,7 @@ export function prepareJoin<
         TableRef,
         ReturnedJoinedTables,
         Omit<Definition, 'joins' | 'joinedTables'> & {
-          joins: string[];
+          joins: JoinNode[];
           joinedTables: ReturnedJoinedTables;
         }
       >;

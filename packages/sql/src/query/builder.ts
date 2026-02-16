@@ -85,7 +85,8 @@ export function buildInsertQuery<
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >
+  >,
+  params: unknown[]
 ) {
   const rows = q.definition?.insertValues;
 
@@ -99,8 +100,10 @@ export function buildInsertQuery<
   const rowPlaceholders = `(${keys.map(() => '?').join(', ')})`;
   const placeholders = rows.map(() => rowPlaceholders).join(', ');
 
-  q.definition.params = rows.flatMap((row) =>
-    keys.map((key) => (row as TableRef['columns'])[key])
+  params.push(
+    ...rows.flatMap((row) =>
+      keys.map((key) => (row as TableRef['columns'])[key])
+    )
   );
 
   return `INSERT INTO ${q.table.name} (${columns}) VALUES ${placeholders} RETURNING *`;
@@ -125,7 +128,8 @@ export function buildUpdateQuery<
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >
+  >,
+  params: unknown[]
 ) {
   if (!q.definition?.updateValues) {
     throw new Error(`UPDATE requires values`);
@@ -137,12 +141,7 @@ export function buildUpdateQuery<
   );
 
   keys = keys.map(quoteIdentifier);
-
-  if (q.definition?.params) {
-    q.definition.params = [...updateParams, ...q.definition.params];
-  } else {
-    q.definition.params = updateParams;
-  }
+  params.unshift(...updateParams);
 
   return `UPDATE ${q.table.name} SET ${keys.map((key) => `${key} = ?`).join(', ')}`;
 }
