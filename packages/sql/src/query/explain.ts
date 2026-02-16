@@ -61,7 +61,7 @@ function buildMySqlExplainQuery(options: Partial<ExplainOptions>) {
   }
 
   if (clauses.length > 1) {
-    throw new Error('Only one explain clause is allowed');
+    throw new Error('MySQL EXPLAIN only support one clauses at a time');
   }
 
   return `EXPLAIN ${clauses.join(' ')}`;

@@ -1,11 +1,19 @@
 export const LogicalOperator = {
   AND: 'AND',
   OR: 'OR',
-  ON: 'ON',
 } as const;
 
 export type LogicalOperator =
   (typeof LogicalOperator)[keyof typeof LogicalOperator];
+
+export const AstType = {
+  GROUP: 'GROUP',
+  COMPARISON: 'COMPARISON',
+  NOT: 'NOT',
+  JOIN: 'JOIN',
+} as const;
+
+export type AstType = (typeof AstType)[keyof typeof AstType];
 
 export const ConditionClause = {
   WHERE: 'WHERE',
@@ -23,21 +31,14 @@ export const AcceptedOperator = {
   GTE: 'gte',
   LTE: 'lte',
   IN: 'in',
-  NOT_IN: 'notIn',
   LIKE: 'like',
-  NOT_LIKE: 'notLike',
   ILIKE: 'ilike',
-  NOT_ILIKE: 'notILike',
   IS_NULL: 'isNull',
-  IS_NOT_NULL: 'isNotNull',
   BETWEEN: 'between',
-  NOT_BETWEEN: 'notBetween',
   STARTS_WITH: 'startsWith',
   ENDS_WITH: 'endsWith',
   REG_EXP: 'regExp',
-  NOT_REG_EXP: 'notRegExp',
   RLIKE: 'rlike',
-  NOT_RLIKE: 'notRlike',
 } as const;
 
 export type AcceptedOperator =

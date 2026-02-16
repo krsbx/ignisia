@@ -9,6 +9,7 @@ import {
   buildSelectQuery,
   buildUpdateQuery,
 } from './builder';
+import { compileAst, compileJoin } from './compiler';
 import { QueryHooksType, QueryType } from './constants';
 import { buildExplainQuery } from './explain';
 import type {
@@ -19,7 +20,6 @@ import type {
 } from './types';
 import {
   getGroupByConditions,
-  getWhereConditions,
   parseAliasedRow,
   sanitizeParams,
 } from './utilities';
@@ -53,7 +53,8 @@ export function toQuery<
     AllowedColumn,
     StrictAllowedColumn
   >,
->(this: Query, dialect?: Dialect | null) {
+>(this: Query, dialect: Dialect | null = this.table.dialect) {
+  const params: unknown[] = [];
   const parts: string[] = [];
 
   switch (this.definition.queryType) {
@@ -62,11 +63,11 @@ export function toQuery<
       break;
 
     case QueryType.INSERT:
-      parts.push(buildInsertQuery(this));
+      parts.push(buildInsertQuery(this, params));
       break;
 
     case QueryType.UPDATE:
-      parts.push(buildUpdateQuery(this));
+      parts.push(buildUpdateQuery(this, params));
       break;
 
     case QueryType.DELETE:
@@ -78,13 +79,17 @@ export function toQuery<
   }
 
   if (this.definition?.joins?.length) {
-    parts.push(this.definition.joins.join(' '));
+    const joinParts: string[] = this.definition.joins.map((join) =>
+      compileJoin(dialect, join, params)
+    );
+
+    parts.push(...joinParts);
   }
 
-  const whereConditions = getWhereConditions(this);
+  if (this.definition.where) {
+    const whereConditions = compileAst(dialect, this.definition.where, params);
 
-  if (whereConditions.length) {
-    parts.push(`WHERE ${whereConditions.join(' ')}`);
+    parts.push(`WHERE ${whereConditions}`);
   }
 
   const groupByConditions = getGroupByConditions(this);
@@ -93,8 +98,14 @@ export function toQuery<
     parts.push(`GROUP BY ${groupByConditions.join(', ')}`);
   }
 
-  if (this.definition?.having?.length) {
-    parts.push(`HAVING ${this.definition.having.join(' ')}`);
+  if (this.definition?.having) {
+    const havingConditions = compileAst(
+      dialect,
+      this.definition.having,
+      params
+    );
+
+    parts.push(`HAVING ${havingConditions}`);
   }
 
   if (this.definition?.orderBy?.length) {
@@ -105,20 +116,16 @@ export function toQuery<
     );
   }
 
-  if (this.definition?.limit !== null) {
+  if (this.definition?.limit != null) {
     parts.push('LIMIT ?');
 
-    if (!this.definition.params) this.definition.params = [];
-
-    this.definition.params.push(this.definition.limit);
+    params.push(this.definition.limit);
   }
 
-  if (this.definition?.offset !== null) {
+  if (this.definition?.offset != null) {
     parts.push('OFFSET ?');
 
-    if (!this.definition.params) this.definition.params = [];
-
-    this.definition.params.push(this.definition.offset);
+    params.push(this.definition.offset);
   }
 
   if (
@@ -132,7 +139,7 @@ export function toQuery<
 
   const sql = buildQuery(parts.join(' '));
 
-  return { query: `${sql};`, params: this.definition.params };
+  return { query: `${sql};`, params: params };
 }
 
 export function toString<

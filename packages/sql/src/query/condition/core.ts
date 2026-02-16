@@ -1,8 +1,10 @@
 import { QueryBuilder } from '..';
 import type { Column } from '../../column';
 import type { Table } from '../../table';
+import type { AstNode, GroupNode } from '../ast';
 import {
   AcceptedOperator,
+  AstType,
   ConditionClause,
   LogicalOperator,
 } from '../constants';
@@ -12,7 +14,6 @@ import type {
   StrictColumnSelector,
   WhereValue,
 } from '../types';
-import { getCondition } from '../utilities';
 
 export function addCondition<
   Alias extends string,
@@ -56,33 +57,49 @@ export function addCondition<
     throw new Error('No DB Dialect defined');
   }
 
-  const isOn = logical === LogicalOperator.ON;
-
   const validClause = clause.toLowerCase() as ValidClause;
-  let condition = getCondition(query.table.dialect, column, operator, value);
 
-  if (isOn) {
-    condition = condition.replace('?', value as string);
+  if (!query.definition[validClause]) {
+    query.definition[validClause] = {
+      type: AstType.GROUP,
+      operator: LogicalOperator.AND,
+      children: [],
+    };
   }
 
-  if (!query.definition[validClause]) query.definition[validClause] = [];
+  // Assert since we already assigned it above
+  const root = query.definition[validClause]!;
 
-  const logicalPrefix =
-    query.definition[validClause].length > 0
-      ? isOn
-        ? LogicalOperator.AND
-        : logical
-      : '';
-  const not = negate ? 'NOT ' : '';
+  let node = {
+    type: AstType.COMPARISON,
+    column,
+    operator,
+    value,
+    values: value,
+  } as AstNode;
 
-  query.definition[validClause].push(
-    `${logicalPrefix} ${not}${condition}`.trim()
-  );
+  if (node.type === AstType.COMPARISON) {
+    if (node.operator === AcceptedOperator.IS_NULL && 'value' in node) {
+      delete node.value;
+    }
 
-  if (
-    operator === AcceptedOperator.IS_NULL ||
-    operator === AcceptedOperator.IS_NOT_NULL
-  ) {
+    if (node.operator === AcceptedOperator.STARTS_WITH) {
+      node.value = '%' + node.value;
+    }
+
+    if (node.operator === AcceptedOperator.ENDS_WITH) {
+      node.value = node.value + '%';
+    }
+  }
+
+  if (negate) {
+    node = {
+      type: AstType.NOT,
+      child: node,
+    };
+  }
+
+  if (operator === AcceptedOperator.IS_NULL) {
     return query as unknown as QueryBuilder<
       Alias,
       TableRef,
@@ -93,28 +110,22 @@ export function addCondition<
     >;
   }
 
-  if (!query.definition.params) query.definition.params = [];
-
-  if (!isOn) {
-    if (operator === AcceptedOperator.STARTS_WITH) {
-      query.definition.params.push(`${value}%`);
-    } else if (operator === AcceptedOperator.ENDS_WITH) {
-      query.definition.params.push(`%${value}`);
-    } else if (Array.isArray(value)) {
-      query.definition.params.push(...value);
-    } else {
-      query.definition.params.push(value);
-    }
+  if (root.operator === logical) {
+    root.children.push(node);
+  } else {
+    query.definition.where = {
+      type: AstType.GROUP,
+      operator: logical,
+      children: [root, node],
+    };
   }
 
-  return query as unknown as QueryBuilder<
+  return query as QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
-    Omit<Definition, typeof validClause | 'params'> & {
-      [Key in typeof validClause]: string[];
-    } & {
-      params: unknown[];
+    Omit<Definition, typeof validClause> & {
+      [Key in typeof validClause]: GroupNode;
     }
   >;
 }
@@ -152,29 +163,53 @@ export function addGroupCondition<
     QueryDefinition<Alias, TableRef, JoinedTables>
   >;
 
-  if (!subDef.where?.length) return query;
+  if (!query.definition.where) {
+    query.definition.where = {
+      type: AstType.GROUP,
+      operator: LogicalOperator.AND,
+      children: [],
+    };
+  }
 
-  const not = negate ? 'NOT ' : '';
-  const grouped = `${not}(${subDef.where.join(' ')})`;
+  if (!subDef.where || subDef.where.children.length === 0) {
+    return query as QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Omit<Definition, 'where'> & {
+        where: GroupNode;
+      }
+    >;
+  }
 
-  if (!query.definition.where) query.definition.where = [];
+  // Assert since we already assigned it above
+  const root = query.definition.where!;
 
-  const logicalPrefix = query.definition.where.length > 0 ? logical : '';
+  let groupNode: AstNode = subDef.where;
 
-  query.definition.where.push(`${logicalPrefix} ${grouped}`.trim());
+  if (negate) {
+    groupNode = {
+      type: AstType.NOT,
+      child: groupNode,
+    };
+  }
 
-  if (subDef.params?.length) {
-    if (!query.definition.params) query.definition.params = [];
-    query.definition.params.push(...subDef.params);
+  if (root.operator === logical) {
+    root.children.push(groupNode);
+  } else {
+    query.definition.where = {
+      type: AstType.GROUP,
+      operator: logical,
+      children: [root, groupNode],
+    };
   }
 
   return query as unknown as QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
-    Omit<Definition, 'where' | 'params'> & {
-      where: string[];
-      params: unknown[];
+    Omit<Definition, 'where'> & {
+      where: GroupNode;
     }
   >;
 }

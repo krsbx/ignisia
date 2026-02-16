@@ -3,17 +3,12 @@ import type { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
 import type { Dialect } from '../table/constants';
-import type {
-  addCondition,
-  addGroupCondition,
-  addRawCondition,
-} from './condition';
+import type { addCondition, addGroupCondition } from './condition';
 import type {
   AcceptedOperator,
   ConditionClause,
   LogicalOperator,
 } from './constants';
-import type { rawCol } from './helper';
 import type {
   ColumnSelector,
   ExplainOptions,
@@ -127,6 +122,14 @@ export interface QueryTransformerContract<
   ): typeof this;
 
   alias<NewAlias extends string>(
+    this: QueryBuilder<
+      Alias,
+      TableRef,
+      JoinedTables,
+      Definition,
+      AllowedColumn,
+      StrictAllowedColumn
+    >,
     alias: NewAlias
   ): QueryBuilder<
     NewAlias,
@@ -148,84 +151,6 @@ export interface QueryConditionContract<
     JoinedTables
   >,
 > {
-  rawWhere(
-    this: QueryBuilder<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn
-    >,
-    column: (c: typeof rawCol) => string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params?: any
-  ): ReturnType<
-    typeof addRawCondition<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn,
-      typeof ConditionClause.WHERE,
-      typeof LogicalOperator.AND,
-      Lowercase<typeof ConditionClause.WHERE>
-    >
-  >;
-
-  rawOr(
-    this: QueryBuilder<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn
-    >,
-    column: (c: typeof rawCol) => string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params?: any
-  ): ReturnType<
-    typeof addRawCondition<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn,
-      typeof ConditionClause.WHERE,
-      typeof LogicalOperator.OR,
-      Lowercase<typeof ConditionClause.WHERE>
-    >
-  >;
-
-  rawHaving(
-    this: QueryBuilder<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn
-    >,
-    column: (c: typeof rawCol) => string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params?: any
-  ): ReturnType<
-    typeof addRawCondition<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn,
-      typeof ConditionClause.HAVING,
-      typeof LogicalOperator.AND,
-      Lowercase<typeof ConditionClause.HAVING>
-    >
-  >;
-
   where<
     ColName extends StrictAllowedColumn,
     Col extends ColName extends `${infer TableAlias}.${infer TableColumn}`
@@ -233,9 +158,7 @@ export interface QueryConditionContract<
         ? TableRef['columns'][TableColumn]
         : JoinedTables[TableAlias]['columns'][TableColumn]
       : never,
-    Operator extends
-      | typeof AcceptedOperator.IS_NULL
-      | typeof AcceptedOperator.IS_NOT_NULL,
+    Operator extends typeof AcceptedOperator.IS_NULL,
     Value extends WhereValue<Col>[Operator],
   >(
     this: QueryBuilder<
@@ -319,9 +242,7 @@ export interface QueryConditionContract<
         ? TableRef['columns'][TableColumn]
         : JoinedTables[TableAlias]['columns'][TableColumn]
       : never,
-    Operator extends
-      | typeof AcceptedOperator.IS_NULL
-      | typeof AcceptedOperator.IS_NOT_NULL,
+    Operator extends typeof AcceptedOperator.IS_NULL,
     Value extends WhereValue<Col>[Operator],
   >(
     this: QueryBuilder<
@@ -394,43 +315,6 @@ export interface QueryConditionContract<
       Operator,
       Value,
       typeof LogicalOperator.OR,
-      Lowercase<typeof ConditionClause.WHERE>
-    >
-  >;
-
-  on<
-    ColName extends StrictAllowedColumn,
-    Operator extends typeof AcceptedOperator.EQ | typeof AcceptedOperator.NE,
-  >(
-    this: QueryBuilder<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn
-    >,
-    columnA: ColName,
-    operator: Operator,
-    columnB: ColName
-  ): ReturnType<
-    typeof addCondition<
-      Alias,
-      TableRef,
-      JoinedTables,
-      Definition,
-      AllowedColumn,
-      StrictAllowedColumn,
-      typeof ConditionClause.WHERE,
-      ColName,
-      ColName extends `${infer TableAlias}.${infer TableColumn}`
-        ? TableAlias extends Alias
-          ? TableRef['columns'][TableColumn]
-          : JoinedTables[TableAlias]['columns'][TableColumn]
-        : never,
-      Operator,
-      ColName,
-      typeof LogicalOperator.ON,
       Lowercase<typeof ConditionClause.WHERE>
     >
   >;
@@ -534,9 +418,7 @@ export interface QueryConditionContract<
           ? TableRef['columns'][TableColumn]
           : JoinedTables[TableAlias]['columns'][TableColumn]
         : never,
-      Operator extends
-        | typeof AcceptedOperator.IS_NULL
-        | typeof AcceptedOperator.IS_NOT_NULL,
+      Operator extends typeof AcceptedOperator.IS_NULL,
       Value extends WhereValue<Col>[Operator],
     >(
       column: ColName,
@@ -604,9 +486,7 @@ export interface QueryConditionContract<
           ? TableRef['columns'][TableColumn]
           : JoinedTables[TableAlias]['columns'][TableColumn]
         : never,
-      Operator extends
-        | typeof AcceptedOperator.IS_NULL
-        | typeof AcceptedOperator.IS_NOT_NULL,
+      Operator extends typeof AcceptedOperator.IS_NULL,
       Value extends WhereValue<Col>[Operator],
     >(
       column: ColName,
