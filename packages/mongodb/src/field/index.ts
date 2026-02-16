@@ -1,4 +1,4 @@
-import { AcceptedFieldTypes } from './constants';
+import type { AcceptedFieldTypes } from './constant';
 import type {
   AcceptedColumnTypeMap,
   ArrayOptions,
@@ -38,14 +38,11 @@ export class Field<
     Definition
   >;
 
-  protected constructor(options: Options) {
+  constructor(options: Options) {
     this.type = options.type;
     this.enums = [];
     this.fields = null as unknown as Fields;
-    this.definition = {
-      default: undefined,
-      notNull: false,
-    } as Definition;
+    this.definition = {} as Definition;
 
     if ('values' in options) {
       this.enums = options.values as readonly Value[];
@@ -90,7 +87,7 @@ export class Field<
       ColValue,
       Value,
       Fields,
-      Definition & { notNull: true }
+      Omit<Definition, 'notNull'> & { notNull: true }
     >;
   }
 
