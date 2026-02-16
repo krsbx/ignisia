@@ -15,6 +15,7 @@ import type {
   QueryConditionContract,
   QueryTransformerContract,
 } from './contract';
+import { compilePipeline } from './filter';
 import { alias, clone } from './helper';
 import { prepareJoin } from './join';
 import type {
@@ -349,5 +350,9 @@ export class QueryBuilder<
         offset: Offset;
       }
     >;
+  }
+
+  public toPipeline() {
+    return compilePipeline(this);
   }
 }

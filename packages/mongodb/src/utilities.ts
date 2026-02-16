@@ -48,3 +48,9 @@ export function quoteIdentifier<T extends string, U extends `"${T}"`>(
 ): U {
   return `"${identifier.replace(/"/g, '""')}"` as U;
 }
+
+export function removeFieldAlias<
+  T extends `${string}."${string}"` | `${string}.*`,
+>(field: T): string {
+  return field.replace(/^[\w]+\."?([^"]+)"?$/, '$1');
+}

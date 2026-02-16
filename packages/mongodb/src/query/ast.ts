@@ -12,7 +12,7 @@ interface BaseComparisonNode {
   field: string;
 }
 
-interface SingleValueComparisonNode extends BaseComparisonNode {
+export interface SingleValueComparisonNode extends BaseComparisonNode {
   operator: Exclude<
     AcceptedOperator,
     typeof AcceptedOperator.IN | typeof AcceptedOperator.BETWEEN
@@ -20,12 +20,12 @@ interface SingleValueComparisonNode extends BaseComparisonNode {
   value: unknown;
 }
 
-interface MultiValueComparisonNode extends BaseComparisonNode {
+export interface MultiValueComparisonNode extends BaseComparisonNode {
   operator: typeof AcceptedOperator.IN | typeof AcceptedOperator.BETWEEN;
   values: unknown[];
 }
 
-interface NullValueComparisonNode extends BaseComparisonNode {
+export interface NullValueComparisonNode extends BaseComparisonNode {
   operator: typeof AcceptedOperator.IS_NULL;
 }
 
