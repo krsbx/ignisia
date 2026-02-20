@@ -45,7 +45,8 @@ export function toQuery<
     TableRef,
     JoinedTables
   >,
-  Query extends QueryBuilder<
+>(
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
@@ -53,25 +54,30 @@ export function toQuery<
     AllowedColumn,
     StrictAllowedColumn
   >,
->(this: Query, dialect: Dialect | null = this.table.dialect) {
+  dialect: Dialect | null = this.table.dialect
+) {
+  if (!dialect) {
+    throw new Error('No dialect defined');
+  }
+
   const params: unknown[] = [];
   const parts: string[] = [];
 
   switch (this.definition.queryType) {
     case QueryType.SELECT:
-      parts.push(buildSelectQuery(this));
+      parts.push(buildSelectQuery.call(this, dialect));
       break;
 
     case QueryType.INSERT:
-      parts.push(buildInsertQuery(this, params));
+      parts.push(buildInsertQuery.call(this, dialect, params));
       break;
 
     case QueryType.UPDATE:
-      parts.push(buildUpdateQuery(this, params));
+      parts.push(buildUpdateQuery.call(this, dialect, params));
       break;
 
     case QueryType.DELETE:
-      parts.push(buildDeleteQuery(this));
+      parts.push(buildDeleteQuery.call(this, dialect));
       break;
 
     default:
@@ -92,7 +98,7 @@ export function toQuery<
     parts.push(`WHERE ${whereConditions}`);
   }
 
-  const groupByConditions = getGroupByConditions(this);
+  const groupByConditions = getGroupByConditions.call(this, dialect);
 
   if (groupByConditions.length) {
     parts.push(`GROUP BY ${groupByConditions.join(', ')}`);
@@ -154,15 +160,16 @@ export function toString<
     TableRef,
     JoinedTables
   >,
-  Query extends QueryBuilder<
+>(
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >,
->(this: Query) {
+  >
+) {
   return this.toQuery().query;
 }
 
@@ -177,15 +184,16 @@ export function toDebugString<
     TableRef,
     JoinedTables
   >,
-  Query extends QueryBuilder<
+>(
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >,
->(this: Query) {
+  >
+) {
   const { query, params } = this.toQuery();
 
   if (!params || params.length === 0) {

@@ -1,7 +1,6 @@
 import type { Column } from '../column';
 import type { Table } from '../table';
 import type { Multiply, Subtract } from '../types';
-import { quoteIdentifier } from '../utilities';
 import {
   having,
   havingNot,
@@ -336,11 +335,11 @@ export class QueryBuilder<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...columns: any[]
   ) {
-    if (!columns.length) {
+    if (!columns?.length) {
       const base = this.definition.baseAlias ?? this.table.name;
 
       columns = Object.keys(this.table.columns).map(
-        (colName) => `${base}.${quoteIdentifier(colName)}`
+        (colName) => `${base}."${colName}"`
       );
     } else {
       columns = columns.map((column) => {

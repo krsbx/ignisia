@@ -1,4 +1,5 @@
 import { Dialect } from '../table/constants';
+import { escapeTableColumn } from '../utilities';
 import type {
   AstNode,
   ComparisonNode,
@@ -10,11 +11,11 @@ import type {
 import { AcceptedJoin, AcceptedOperator, AstType } from './constants';
 
 function compileComparison(
-  dialect: Dialect | null,
+  dialect: Dialect,
   node: ComparisonNode,
   params: unknown[]
 ): string {
-  const column = node.column;
+  const column = escapeTableColumn(dialect, node.column);
 
   if (
     node.operator === AcceptedOperator.BETWEEN ||
@@ -107,7 +108,7 @@ function compileComparison(
 }
 
 function compileNot(
-  dialect: Dialect | null,
+  dialect: Dialect,
   node: NotNode,
   params: unknown[]
 ): string {
@@ -117,7 +118,7 @@ function compileNot(
 }
 
 function compileGroup(
-  dialect: Dialect | null,
+  dialect: Dialect,
   node: GroupNode,
   params: unknown[]
 ): string {
@@ -133,7 +134,7 @@ function compileGroup(
 }
 
 export function compileAst(
-  dialect: Dialect | null,
+  dialect: Dialect,
   node: AstNode,
   params: unknown[]
 ): string {
@@ -153,12 +154,12 @@ export function compileAst(
 }
 
 export function compileJoin(
-  dialect: Dialect | null,
+  dialect: Dialect,
   join: JoinNode,
   params: unknown[]
 ): string {
-  const table = join.table.name;
-  const alias = join.alias;
+  const table = escapeTableColumn(dialect, join.table.name);
+  const alias = escapeTableColumn(dialect, join.alias);
 
   if (join.join === AcceptedJoin.CROSS || join.join === AcceptedJoin.NATURAL) {
     return `${join.join} JOIN ${table} AS ${alias}`;

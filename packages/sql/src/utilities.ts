@@ -1,3 +1,5 @@
+import { QuoteCharacter, type Dialect } from './table/constants';
+
 export function deepClone<T>(obj: T): T {
   if (Array.isArray(obj)) {
     return obj.map((item) => deepClone(item)) as unknown as T;
@@ -42,9 +44,18 @@ export function cloneDefinition<T extends Record<string, unknown>>(def: T): T {
 
   return clone;
 }
+export function escapeTableColumn<
+  T extends Dialect,
+  U extends string,
+  V extends (typeof QuoteCharacter)[T],
+  W extends U extends `${infer Table}.${infer Column}`
+    ? `${V}${Table}${V}.${V}${Column}${V}`
+    : `${V}${T}${V}`,
+>(dialect: T, identifier: U): W {
+  const identifiers = identifier.split('.');
+  const quote = QuoteCharacter[dialect];
 
-export function quoteIdentifier<T extends string, U extends `"${T}"`>(
-  identifier: T
-): U {
-  return `"${identifier.replace(/"/g, '""')}"` as U;
+  return identifiers
+    .map((identifier) => `${quote}${identifier.replace(/"/g, '')}${quote}`)
+    .join('.') as W;
 }

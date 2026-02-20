@@ -1,7 +1,8 @@
 import type { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
-import { quoteIdentifier } from '../utilities';
+import type { Dialect } from '../table/constants';
+import { escapeTableColumn } from '../utilities';
 import type {
   ColumnSelector,
   QueryDefinition,
@@ -21,47 +22,56 @@ export function buildSelectQuery<
     JoinedTables
   >,
 >(
-  q: QueryBuilder<
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >
+  >,
+  dialect: Dialect
 ) {
-  const from = getTableSelectName(q);
+  const from = getTableSelectName(dialect, this);
   const columns: string[] = [];
 
-  if (q.definition.select?.length) {
-    for (const col of q.definition.select) {
+  if (this.definition.select?.length) {
+    for (const col of this.definition.select) {
       if (typeof col === 'object') {
-        const alias = quoteIdentifier(col.as.replace(/"/g, ''));
+        const column = escapeTableColumn(dialect, col.column.replace(/"/g, ''));
+        const alias = escapeTableColumn(dialect, col.as.replace(/"/g, ''));
 
-        columns.push(`${col.column} AS ${alias}`);
+        columns.push(`${column} AS ${alias}`);
         continue;
       }
 
       if (!col.endsWith('*')) {
-        const alias = quoteIdentifier(col.replace(/"/g, ''));
+        const column = escapeTableColumn(dialect, col.replace(/"/g, ''));
+        const alias = column;
 
-        columns.push(`${col} AS ${alias}`);
+        columns.push(`${column} AS ${alias}`);
         continue;
       }
 
-      columns.push(col);
+      const [table] = escapeTableColumn(dialect, col.split('.')[0]);
+
+      columns.push(`${table}.*`);
     }
   }
 
-  if (q.definition?.aggregates) {
-    for (const aggregate of q.definition.aggregates) {
-      columns.push(
-        `${aggregate.fn}(${aggregate.column}) AS ${quoteIdentifier(aggregate.as as string)}`
+  if (this.definition?.aggregates) {
+    for (const aggregate of this.definition.aggregates) {
+      const column = escapeTableColumn(
+        dialect,
+        aggregate.column.replace(/"/g, '')
       );
+      const alias = escapeTableColumn(dialect, aggregate.as!.replace(/"/g, ''));
+
+      columns.push(`${aggregate.fn}(${column}) AS ${alias}`);
     }
   }
 
-  const distinct = q.definition.distinct ? 'DISTINCT ' : '';
+  const distinct = this.definition.distinct ? 'DISTINCT ' : '';
 
   return `SELECT ${distinct}${columns.join(', ')} FROM ${from}`;
 }
@@ -78,7 +88,7 @@ export function buildInsertQuery<
     JoinedTables
   >,
 >(
-  q: QueryBuilder<
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
@@ -86,9 +96,10 @@ export function buildInsertQuery<
     AllowedColumn,
     StrictAllowedColumn
   >,
+  dialect: Dialect,
   params: unknown[]
 ) {
-  const rows = q.definition?.insertValues;
+  const rows = this.definition?.insertValues;
 
   if (!rows?.length) {
     throw new Error(`INSERT requires values`);
@@ -96,7 +107,7 @@ export function buildInsertQuery<
 
   const keys = Object.keys(rows[0]);
 
-  const columns = keys.map(quoteIdentifier).join(', ');
+  const columns = keys.map((key) => escapeTableColumn(dialect, key)).join(', ');
   const rowPlaceholders = `(${keys.map(() => '?').join(', ')})`;
   const placeholders = rows.map(() => rowPlaceholders).join(', ');
 
@@ -106,7 +117,7 @@ export function buildInsertQuery<
     )
   );
 
-  return `INSERT INTO ${q.table.name} (${columns}) VALUES ${placeholders}`;
+  return `INSERT INTO ${escapeTableColumn(dialect, this.table.name)} (${columns}) VALUES ${placeholders}`;
 }
 
 export function buildUpdateQuery<
@@ -121,7 +132,7 @@ export function buildUpdateQuery<
     JoinedTables
   >,
 >(
-  q: QueryBuilder<
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
@@ -129,21 +140,22 @@ export function buildUpdateQuery<
     AllowedColumn,
     StrictAllowedColumn
   >,
+  dialect: Dialect,
   params: unknown[]
 ) {
-  if (!q.definition?.updateValues) {
+  if (!this.definition?.updateValues) {
     throw new Error(`UPDATE requires values`);
   }
 
-  let keys = Object.keys(q.definition.updateValues);
+  let keys = Object.keys(this.definition.updateValues);
   const updateParams = keys.map(
-    (key) => q.definition.updateValues![key] as unknown
+    (key) => this.definition.updateValues![key] as unknown
   );
 
-  keys = keys.map(quoteIdentifier);
+  keys = keys.map((key) => escapeTableColumn(dialect, key));
   params.unshift(...updateParams);
 
-  return `UPDATE ${q.table.name} SET ${keys.map((key) => `${key} = ?`).join(', ')}`;
+  return `UPDATE ${escapeTableColumn(dialect, this.table.name)} SET ${keys.map((key) => `${key} = ?`).join(', ')}`;
 }
 
 export function buildDeleteQuery<
@@ -158,14 +170,15 @@ export function buildDeleteQuery<
     JoinedTables
   >,
 >(
-  q: QueryBuilder<
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >
+  >,
+  dialect: Dialect
 ) {
-  return `DELETE FROM ${q.table.name}`;
+  return `DELETE FROM ${escapeTableColumn(dialect, this.table.name)}`;
 }

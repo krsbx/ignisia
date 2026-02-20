@@ -1,7 +1,8 @@
 import { QueryBuilder } from '.';
 import type { Column } from '../column';
 import type { Table } from '../table';
-import { quoteIdentifier } from '../utilities';
+import type { Dialect } from '../table/constants';
+import { escapeTableColumn } from '../utilities';
 import { QueryType } from './constants';
 import type {
   AliasedColumn,
@@ -107,7 +108,8 @@ export function getGroupByConditions<
     TableRef,
     JoinedTables
   >,
-  Query extends QueryBuilder<
+>(
+  this: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
@@ -115,34 +117,40 @@ export function getGroupByConditions<
     AllowedColumn,
     StrictAllowedColumn
   >,
->(q: Query) {
-  if (q.definition.queryType !== QueryType.SELECT) return [];
+  dialect: Dialect
+) {
+  if (this.definition.queryType !== QueryType.SELECT) return [];
 
-  if (q.definition.groupBy?.length) return q.definition.groupBy;
+  if (this.definition.groupBy?.length) return this.definition.groupBy;
 
-  if (q.definition.aggregates?.length) {
-    if (q.definition.select?.length)
-      return q.definition.select.map((col) => {
+  if (this.definition.aggregates?.length) {
+    if (this.definition.select?.length) {
+      return this.definition.select.map((col) => {
         if (typeof col === 'string' && col.endsWith('*')) {
           const { from, columns } = getTableColumnNames(
             col,
-            q.definition.baseAlias ?? q.table.name,
-            q.table,
-            q.definition.joinedTables ?? {}
+            this.definition.baseAlias ?? this.table.name,
+            this.table,
+            this.definition.joinedTables ?? {}
           );
 
           return columns
-            .map((column) => `${from}.${quoteIdentifier(column)}`)
+            .map((column) => escapeTableColumn(dialect, `${from}.${column}`))
             .join(' ');
         }
 
-        return col;
+        if (typeof col === 'string') {
+          return escapeTableColumn(dialect, col);
+        }
+
+        return escapeTableColumn(dialect, col.column);
       });
+    }
 
-    const from = q.definition.baseAlias ?? q.table.name;
+    const from = this.definition.baseAlias ?? this.table.name;
 
-    return Object.keys(q.table.columns).map(
-      (col) => `${from}.${quoteIdentifier(col)}`
+    return Object.keys(this.table.columns).map((col) =>
+      escapeTableColumn(dialect, `${from}.${col}`)
     );
   }
 
@@ -160,18 +168,22 @@ export function getTableSelectName<
     TableRef,
     JoinedTables
   >,
-  Query extends QueryBuilder<
+>(
+  dialect: Dialect,
+  q: QueryBuilder<
     Alias,
     TableRef,
     JoinedTables,
     Definition,
     AllowedColumn,
     StrictAllowedColumn
-  >,
->(q: Query) {
-  if (!q.definition.baseAlias) return q.table.name;
+  >
+) {
+  const tableName = escapeTableColumn(dialect, q.table.name);
 
-  return `${q.table.name} AS ${q.definition.baseAlias}`;
+  if (!q.definition.baseAlias) return tableName;
+
+  return `${tableName} AS ${escapeTableColumn(dialect, q.definition.baseAlias)}`;
 }
 
 export function parseAliasedRow({
